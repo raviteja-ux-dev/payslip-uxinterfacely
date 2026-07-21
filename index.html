@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Pay Slip Generator</title>
+  </head>
+  <body>
+    <form id="payslipgenerator" name="payslipgenerator">
+      <div class="payslip-form">
+        <div class="main-head">
+          <h4> CTC Payslip Generator</h4>
+        </div>
+        <div id="formCreation" class="form-creation">
+         <div class="form-control">
+            <label for="name">Name</label>
+            <input class="form-inputs" type="text" name="Name" id="name" value="" name="Name">
+         </div>
+
+          <!-- Start date field-->
+         <div class="form-control">
+            <label for="StartDate">Start Date</label>
+            <input class="form-inputs" type="date" id="startDate" value="START DATE" name="StartDate" onchange="calculateDays()">
+            <!-- onchange="calculateDays()" -->
+         </div>
+
+          <!--end date field-->         
+          <div class="form-control">
+            <label for="enddate">End Date</label>
+            <input class="form-inputs" type="date" id="endDate"  name="EndDate" onchange="calculateDays()">
+         </div>              
+
+          <!--Designation field--> 
+          <div class="form-control">
+            <label for="Designation">Designation</label>
+            <input class="form-inputs" type="text" id="Designation" value="" name="Designation">
+         </div>         
+        
+
+          <!--Annual Ctc field-->      
+          <div class="form-control">
+            <label for="AnnualCTC">Annual CTC</label>
+            <input class="form-inputs" type="text" id="AnnualCTC" value="" name="AnnualCTC">
+         </div>         
+        
+          <!--employee-id field-->  
+          <div class="form-control">
+            <label for="AssociateID">Associate ID</label>
+            <input class="form-inputs" type="text" id="AssociateID" value="" name="AssociateID">
+         </div>         
+        
+          <!--join date field-->
+          <div class="form-control">
+            <label for="JoinDate">Join Date</label>
+            <input class="form-inputs" type="date" id="JoinDate" value="" name="JoinDate">
+          </div> 
+
+          <!-- location field -->
+          <div class="form-control">
+            <label for="location">Location</label>
+            <input class="form-inputs" type="text" id="location" value="" name="location">
+          </div>         
+          <!-- department field -->
+          <div class="form-control">
+            <label for="Department">Department</label>
+            <input class="form-inputs" type="text" id="Department" value="" name="Department">
+         </div>
+
+          <!-- payable days field -->
+          <div class="form-control">
+            <label for="DaysPayable">Days Payable</label>
+            <input class="form-inputs" type="number" id="DaysPayable"  readonly>
+         </div>         
+
+          <!-- working days field -->
+          <div class="form-control">
+            <label for="DaysWorked">Days Worked</label>
+            <input class="form-inputs" type="number" id="DaysWorked" readonly>
+
+         </div>  
+
+          <!-- lop field --> 
+          <div class="form-control">
+            <label for="Lopdays">LOP Days</label>
+            <select id="lopdays" class="form-inputs" onchange="toggleLop()">
+              <option value="">Select</option>  
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+         </div>
+
+          <div class="form-control" id="Loppaydbox" style="display: none;">
+              <label for="loppayfield">Lop Days </label>
+              <input type="number" id="LopPayField" class="form-inputs" name="Lopdaysfield" oninput="updatelop()">               
+          </div>
+
+          <!-- pan filed -->
+          <div class="form-control">
+            <label for="pan">PAN</label>
+            <input class="form-inputs" type="text" id="pan" value="" name="pan">
+         </div> 
+
+          
+          
+          <!-- variable filed -->
+        <div class="form-control">
+          <label for="variablePay">Variable Pay</label>
+          <select id="variablePay" class="form-inputs" onchange="toggleVariablePay()">               
+            <option value="">Select</option>  
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+          <div class="form-control" id="variablePayAmount" style="display: none;">
+              <label for="variableAmount">Variable Pay Amount</label>
+              <input type="number" id="variableAmount" class="form-inputs" name="variablepayamount" oninput="updateVariablePay()">               
+          </div>
+
+          <!-- Bonus field -->
+          <div class="form-control">
+            <label for="Bonus">Bonus</label>
+            <select id="Bonus" class="form-inputs" onchange="toggleBonus()">
+              <option value="">Select</option>
+              <option value="yes"> Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+
+          <div class="form-control" id="BonusAmountBox" style="display:none;">
+            <label for="BonusAmount">Bonus Amount</label>
+            <input type="number" id="BonusAmount" class="form-inputs" name="bonusamount" oninput="updateBonus()">
+          </div>
+
+          <!-- PF Field -->
+          <div class="form-control">
+            <label for="PF">PF</label>
+            <select id="PFfield" class="form-inputs" onchange="togglePF()">
+              <option value="">Select</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+
+           <div class="form-control" id="PFamountBox" style="display:none;">
+              <label>Employee Fund</label>
+              <input class="form-inputs" type="number"  id="pfEmployee" oninput="updatePF()">
+              <label>Employer Fund</label>
+              <input class="form-inputs" type="number" id="pfEmployer" oninput="updatePF()">
+              
+            </div>
+
+
+          
+          <!-- UAN field -->
+          <div class="form-control">
+              <label for="UAN">UAN</label>
+              <select class="form-inputs" id="UAN" onchange="toggleUan()">
+                  <option value="">Select</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+              </select>
+          </div>
+
+          <!-- Hidden UAN Number -->
+          
+
+          <div class="form-control" id="uanNumberBox" style="display:none;">
+              <label for="uanNumber">UAN Number</label>
+              <input type="number" id="uanNumber" class="form-inputs">
+          </div>
+          
+          <!-- Address Field  -->
+          <!-- <div class="form-control">
+           <label for="address">Address</label>
+          <select
+            id="address"
+            class="form-inputs"
+            onchange="toggleAddress()">
+
+            <option value="">Select</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+          </div>
+         
+
+          <div class="form-control"
+            id="addDetailsBox"
+            style="display:none;">
+            <label>Address Details</label>
+            <input class="form-inputs" id="addDetails">            
+         </div> -->
+
+
+          <!-- gst field -->
+          <div class="form-control">
+            <label for="gst">GST</label>
+            <input class="form-inputs" id="gst" type="text" value="36AAIFU2638L1ZQ">
+          </div>
+
+       
+          <!-- TDS Field -->
+          <div class="form-control">
+            <label for="tds">TDS</label>
+            <select  id="tds" class="form-inputs" onchange="toggleTds()">           
+            <option value="">Select</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                  </select>
+              </div>
+          <!--hidden TDS field -->
+          <div class="form-control" id="tdsAmountBox" style="display:none;">        
+              <label>TDS Amount</label>
+              <input id="tdsAmount" class="form-inputs"> 
+          </div>
+        </div>
+        <!-- Button - field -->
+        <div class="buttons">
+          <button type="button" onclick="generatePayslip()"> Generate Payslip </button>               
+        </div>
+        
+    </form>
+
+    <!-- PAYSLIP SECTION -->
+      <div id="payslipLayout" class="payslip-layout" style="display:none;">
+          <div class="main-head">
+            <h2>
+              <input type="text" id="paymonth" readonly>
+            </h2>          
+          </div>
+
+<!-- Employee Details  Table -->
+
+        <div class="table-wrapper">
+          <table id="employeeTable" class="emp-table">
+          <tr>
+
+            <td rowspan="4" class="logo">
+              <img src="logo.png" alt="UXinterfacely Logo">
+            </td>
+            <th>Employee ID</th>
+            <td>
+              <input type="text" id="empid" readonly>
+            </td>
+            <th>Name</th>
+            <td>
+              <input type="text" id="empname" readonly>
+            </td>
+          </tr>
+
+          <tr>
+            <th>Base Location</th>
+            <td id="baseLocation"> </td>           
+            <th>Designation</th>
+            <td>
+              <input type="text" id="designation" readonly>
+            </td>
+          </tr>
+
+          <tr>
+            <th>PAN</th>
+            <td>
+              <input type="text" id="displayPan" readonly>
+            </td>
+            <th>Date Of Joining</th>
+              <td>
+                <input type="date" id="joindate" readonly>
+              </td>            
+          </tr>
+          <tr>
+            <th>UAN</th>
+            <td>
+              <input type="text" id="displayUan" readonly>
+            </td>    
+            <th> GST NO:</th>
+            <td> 36AAIFU2638L1ZQ</td>
+          </tr>
+        </table>
+        </div>
+
+        <!-- Salary Table -->
+         <div class="salary-container">
+          <table class="earnings-table">
+              <tr>
+                <th>Earnings</th>
+                <th>Current Month</th>
+              </tr>
+
+              <tr>
+                <td>Basic Salary</td>
+                <td><input id="basicsalary" readonly></td>
+              </tr>
+
+              <tr>
+                <td>HRA</td>
+                <td><input id="hra" readonly></td>
+              </tr>
+
+              <tr>
+                <td>Special Allowance</td>
+                <td><input id="specialallowance" readonly></td>
+              </tr>
+
+              <tr id="variableRow">
+                <td>Variable Pay</td>
+                <td><input id="variableDisplay" readonly></td>
+              </tr>
+
+              <tr id="bonusRow">
+                <td>Bonus</td>
+                <td><input id="bonusDisplay" readonly></td>
+              </tr>
+
+              <tr>
+                <td>Total</td>
+                <td><input id="totalEarnings" readonly></td>
+              </tr>
+
+          </table>
+          
+          <table class="deductions-table">
+            <tr>
+                <th>Deductions</th>
+                <th>Current Month</th>
+            </tr>
+
+            <tr id="pfRow">
+                <td>Provident Fund</td>
+                <td><input id="displayPF" readonly></td>
+            </tr>
+
+            <tr>
+                <td>Professional Tax</td>
+                <td><input id="proftax" readonly></td>
+            </tr>
+
+            <tr>
+                <td>Income Tax</td>
+                <td><input id="incometax" readonly></td>
+            </tr>
+
+            <tr>
+                <td>Employee Welfare</td>
+                <td><input id="welfare" readonly></td>
+            </tr>
+
+            <tr>
+                <td>Total</td>
+                <td><input id="totalDeduction" readonly></td>
+            </tr>
+
+          </table>
+         </div>
+
+
+           <!-- Net Pay -->
+            <div class="net-pay">
+              <h2>Net Pay : ₹ <span id="netpay"> 0.00 </span> </h2>
+              <div class="amount-word">
+                Amount in Words :
+                <span id="amountWords"></span>
+              </div>
+            </div>
+          </div>
+        <div class="printbuttons">
+          <button type="button" onclick="downloadPDF()"> Download PDF </button>
+          
+        </div>
+      </div>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+  </body>
+</html>

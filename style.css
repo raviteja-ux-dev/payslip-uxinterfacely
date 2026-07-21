@@ -1,0 +1,257 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, sans-serif;
+    background:#f5f5f5;
+    padding:40px;
+}
+
+.payslip-form{
+  margin:24px 15px 24px 20px;
+}
+.main-head h4 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  
+  
+}
+.form-creation {
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:25px 20px;
+ 
+}
+.form-control {
+  display:flex;
+  flex-direction: column;
+  gap:6px;
+}
+.form-control label {
+    font-size: 16px;
+    font-weight: 500;
+    min-height: 22px;
+}
+
+.form-inputs {
+  width:100%;
+  height: 48px;
+  padding:10px 14px;
+  border: 1px solid #999;
+  border-radius: 5px;
+  font-size: 18px;
+}
+
+.buttons{
+    margin-top:35px;
+    display:block;
+    margin-left: 40px;
+    width:fit-content;
+    height:fit-content;
+
+}
+
+.buttons button{
+    background:#0066cc;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:18px;
+    width:100%;
+    text-align: center;
+}
+
+/* pay-slip-layout */
+.payslip-layout{
+    width:279.4mm;
+    min-height:215.9mm;
+    margin:auto;
+    background:#fff;
+    padding:10mm;
+    box-sizing:border-box;
+}
+
+.main-head{
+    display:block;
+    padding:20px;
+    margin-left:30px;
+}
+
+.main-head h2{
+    font-size:14px;
+    font-weight:700;
+}
+
+.main-head h2 input{
+    border:none;
+    outline:none;
+    width:100%;
+    background:transparent;
+    font-size:16px;
+}
+
+.table-wrapper{
+    margin-left:0;
+}
+
+.emp-table{
+    width:100%;
+    border-collapse:collapse;
+    
+}
+
+.emp-table th,
+.emp-table td{
+    padding:12px;
+    border:1.5px solid;
+    font-size:16px;
+    text-align:justify;
+    font-weight:bold;
+}
+
+.emp-table td input{
+    border:none;
+    outline:none;
+    width:100%;
+    background:transparent;
+    font-size:16px;
+    font-weight: bold;
+}
+
+.logo{
+    width:180px;
+    text-align:center;
+    vertical-align:top;
+}
+
+.logo img{
+    width:160px;
+}
+/* Working Days */
+.working-days{
+    margin-top:10px;
+    margin-left:50px;
+}
+/* Days calculation */
+.days-calculation{
+    border-collapse:collapse;
+    width:100%;
+}
+
+.days-calculation th,
+.days-calculation td{
+    padding:12px;
+    border:1.5px solid;
+    font-size:13px;
+    font-weight:bold;
+}
+
+.days-calculation td input{
+    border:none;
+    outline:none;
+    width:100%;
+    background:transparent;
+    font-size:16px;
+}
+
+
+.salary-container{
+    display:flex;
+    gap:10px;
+    width:100%;
+  
+}
+
+.earnings-table,
+.deductions-table{
+    margin-top:10px;
+    width:50%;
+    border-collapse:collapse;
+}
+
+.earnings-table th,
+.earnings-table td,
+.deductions-table th,
+.deductions-table td{
+
+    border:1px solid #000;
+    padding:8px;
+    font-weight: bold;
+}
+
+.earnings-table th,
+.deductions-table th{
+
+    background:#e8e8e8;
+}
+
+/* net pay */
+.net-pay{
+    margin:20px 0 0 0;
+}
+
+.net-pay h2{
+    font-size:16px;
+    font-weight:700;
+}
+
+.amount-word{
+    margin-top:15px;
+    font-size:14px;
+    font-weight:bold;
+}
+
+.printbuttons{
+    margin-top:20px;
+    display:block;
+    margin-left: 40px;
+    width:fit-content;
+    height:fit-content;
+    font-size: 22px;
+}
+
+.printbuttons button{
+    background:#0066cc;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:18px;
+    width:100%;
+    text-align: center;
+}
+.earnings-table td input,
+.earnings-table th input,
+.deductions-table td input,
+.deductions-table th input{
+    width:100%;
+    border:none;
+    outline:none;
+    background:transparent;
+    box-shadow:none;
+    text-align:center;
+    font-size:16px;
+    font-weight:bold;
+}
+
+@media print{
+
+.printbuttons{
+
+display:none;
+
+}
+
+}
+
+/* 
+#pfHead,
+#pfFundBox {
+    display: none;
+} */
