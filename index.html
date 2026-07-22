@@ -184,7 +184,7 @@
           </div>
         </div>
 
-        <!-- Form Button (Stays above Payslip Layout) -->
+        <!-- Form Action Toolbar (Stays above Payslip Layout) -->
         <div class="action-toolbar print-hide" id="formToolbar">
           <button type="button" class="btn-primary" onclick="generatePayslip()"> Generate Payslip </button>               
         </div>
@@ -246,72 +246,28 @@
         </table>
         </div>
 
-        <!-- Salary Table -->
-         <div class="salary-container">
-          <table class="earnings-table">
-              <tr>
-                <th>Earnings</th>
-                <th>Current Month</th>
-              </tr>
-
-              <tr>
-                <td>Basic Salary</td>
-                <td><input id="basicsalary" readonly></td>
-              </tr>
-
-              <tr>
-                <td>HRA</td>
-                <td><input id="hra" readonly></td>
-              </tr>
-
-              <tr>
-                <td>Special Allowance</td>
-                <td><input id="specialallowance" readonly></td>
-              </tr>
-
-              <tr id="variableRow" style="display: none;">
-                <td>Variable Pay</td>
-                <td><input id="variableDisplay" readonly></td>
-              </tr>
-
-              <tr id="bonusRow" style="display: none;">
-                <td>Bonus</td>
-                <td><input id="bonusDisplay" readonly></td>
-              </tr>
-
-              <tr>
-                <td>Total</td>
-                <td><input id="totalEarnings" readonly></td>
-              </tr>
-          </table>
-          
-          <table class="deductions-table">
+        <!-- Unified Salary Table (Divided into 4 Columns) -->
+        <table class="salary-table" id="salaryTable">
+          <thead>
             <tr>
-                <th>Deductions</th>
-                <th>Current Month</th>
+              <th style="width: 30%;">Earnings</th>
+              <th style="width: 20%;">Current Month</th>
+              <th style="width: 30%;">Deductions</th>
+              <th style="width: 20%;">Current Month</th>
             </tr>
-
-            <tr id="pfRow" style="display: none;">
-                <td>Provident Fund</td>
-                <td><input id="displayPF" readonly></td>
-            </tr>
-
+          </thead>
+          <tbody id="salaryTableBody">
+            <!-- Rows are dynamically paired & rendered by JS -->
+          </tbody>
+          <tfoot>
             <tr>
-                <td>Professional Tax</td>
-                <td><input id="proftax" readonly></td>
+              <th>Total</th>
+              <th><input id="totalEarnings" readonly></th>
+              <th>Total</th>
+              <th><input id="totalDeduction" readonly></th>
             </tr>
-
-            <tr id="tdsRow" style="display: none;">
-                <td>Income Tax</td>
-                <td><input id="incometax" readonly></td>
-            </tr>
-
-            <tr>
-                <td>Total</td>
-                <td><input id="totalDeduction" readonly></td>
-            </tr>
-          </table>
-         </div>
+          </tfoot>
+        </table>
 
         <!-- Net Pay Statement -->
         <div class="net-pay-statement">
@@ -319,11 +275,11 @@
         </div>
       </div>
 
-      <!-- Action Buttons Below Payslip (PDF, Add Current Row, Clear) -->
+      <!-- Action Buttons Toolbar -->
       <div class="action-toolbar print-hide" id="actionToolbar" style="display:none;">
         <button type="button" class="btn-pdf" onclick="downloadPDF()"> Download PDF </button>
         <button type="button" class="btn-excel" onclick="addCurrentRowToExcel()"> Add Current Row </button>
-        <!-- <button type="button" class="btn-clear" onclick="clearExcelRows()"> Clear Stored Rows </button> -->
+        <button type="button" class="btn-clear" onclick="clearExcelRows()"> Clear Stored Rows </button>
       </div>
 
    <!-- Libraries -->

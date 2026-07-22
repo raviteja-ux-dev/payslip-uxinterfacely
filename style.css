@@ -76,41 +76,17 @@ body {
 }
 
 /* Button Color Schemes & Hover Animations */
-.btn-primary {
-    background-color: #0066cc;
-}
-.btn-primary:hover {
-    background-color: #0052a3;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(0, 102, 204, 0.25);
-}
+.btn-primary { background-color: #0066cc; }
+.btn-primary:hover { background-color: #0052a3; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0, 102, 204, 0.25); }
 
-.btn-pdf {
-    background-color: #0d6efd;
-}
-.btn-pdf:hover {
-    background-color: #0b5ed7;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(13, 110, 253, 0.25);
-}
+.btn-pdf { background-color: #0d6efd; }
+.btn-pdf:hover { background-color: #0b5ed7; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(13, 110, 253, 0.25); }
 
-.btn-excel {
-    background-color: #28a745;
-}
-.btn-excel:hover {
-    background-color: #218838;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(40, 167, 69, 0.25);
-}
+.btn-excel { background-color: #28a745; }
+.btn-excel:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(40, 167, 69, 0.25); }
 
-.btn-clear {
-    background-color: #dc3545;
-}
-.btn-clear:hover {
-    background-color: #c82333;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(220, 53, 69, 0.25);
-}
+.btn-clear { background-color: #dc3545; }
+.btn-clear:hover { background-color: #c82333; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(220, 53, 69, 0.25); }
 
 /* Pay Slip Layout */
 .payslip-layout {
@@ -178,45 +154,44 @@ body {
     width: 160px;
 }
 
-.salary-container {
-    display: flex;
-    gap: 10px;
+/* Single Unified Salary Table Divided into Columns */
+.salary-table {
     width: 100%;
-}
-
-.earnings-table,
-.deductions-table {
     margin-top: 10px;
-    width: 50%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.earnings-table th,
-.earnings-table td,
-.deductions-table th,
-.deductions-table td {
+.salary-table th,
+.salary-table td {
     border: 1px solid #000;
-    padding: 8px;
+    padding: 8px 10px;
     font-weight: bold;
+    font-size: 15px;
+    vertical-align: middle;
+    box-sizing: border-box;
 }
 
-.earnings-table th,
-.deductions-table th {
+.salary-table th {
     background: #e8e8e8;
+    text-align: center;
 }
 
-.earnings-table td input,
-.earnings-table th input,
-.deductions-table td input,
-.deductions-table th input {
+.salary-table td input,
+.salary-table th input {
     width: 100%;
     border: none;
     outline: none;
     background: transparent;
     box-shadow: none;
     text-align: center;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
+}
+
+.salary-table tfoot th {
+    background: #e8e8e8;
+    text-align: center;
 }
 
 /* Net Pay Statement */
@@ -240,20 +215,11 @@ body {
 
 /* Responsive Alignment */
 @media screen and (max-width: 1024px) {
-    .action-toolbar {
-        flex-wrap: wrap;
-    }
-    .action-toolbar button {
-        flex: 1 1 45%;
-    }
+    .action-toolbar { flex-wrap: wrap; }
+    .action-toolbar button { flex: 1 1 45%; }
 }
 
 @media screen and (max-width: 600px) {
-    .action-toolbar {
-        flex-direction: column;
-    }
-    .action-toolbar button {
-        width: 100%;
-        flex: 1 1 100%;
-    }
+    .action-toolbar { flex-direction: column; }
+    .action-toolbar button { width: 100%; flex: 1 1 100%; }
 }

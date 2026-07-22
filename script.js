@@ -21,25 +21,63 @@ function hide(id) {
 }
 
 /* ============================================================
-   TABLE ROWS VISIBILITY CONTROL (IF YES ONLY SHOW ROW)
+   SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW)
 ============================================================ */
 
-function updateTableRowsVisibility() {
-    // 1. Variable Pay Row
-    let hasVariable = document.getElementById("variablePay").value === "yes";
-    document.getElementById("variableRow").style.display = hasVariable ? "table-row" : "none";
+function renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, incomeTax, ) {
+    // 1. Build list of active Earnings
+    let earningsList = [
+        { label: "Basic Salary", val: basic.toFixed(2) },
+        { label: "HRA", val: hra.toFixed(2) },
+        { label: "Special Allowance", val: special.toFixed(2) }
+    ];
 
-    // 2. Bonus Row
-    let hasBonus = document.getElementById("Bonus").value === "yes";
-    document.getElementById("bonusRow").style.display = hasBonus ? "table-row" : "none";
+    if (document.getElementById("variablePay").value === "yes") {
+        earningsList.push({ label: "Variable Pay", val: variable.toFixed(2) });
+    }
 
-    // 3. Provident Fund Row
-    let hasPF = document.getElementById("PFfield").value === "yes";
-    document.getElementById("pfRow").style.display = hasPF ? "table-row" : "none";
+    if (document.getElementById("Bonus").value === "yes") {
+        earningsList.push({ label: "Bonus", val: bonus.toFixed(2) });
+    }
 
-    // 4. Income Tax (TDS) Row
-    let hasTDS = document.getElementById("tds").value === "yes";
-    document.getElementById("tdsRow").style.display = hasTDS ? "table-row" : "none";
+    // 2. Build list of active Deductions
+    let deductionsList = [];
+
+    if (document.getElementById("PFfield").value === "yes") {
+        deductionsList.push({ label: "Provident Fund", val: pf.toFixed(2) });
+    }
+
+    deductionsList.push({ label: "Professional Tax", val: professionalTax.toFixed(2) });
+
+    if (document.getElementById("tds").value === "yes") {
+        deductionsList.push({ label: "Income Tax", val: incomeTax.toFixed(2) });
+    }
+
+    
+
+    // 3. Render rows into the single table
+    let tbody = document.getElementById("salaryTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    let maxRows = Math.max(earningsList.length, deductionsList.length);
+
+    for (let i = 0; i < maxRows; i++) {
+        let earn = earningsList[i] || { label: "", val: "" };
+        let ded = deductionsList[i] || { label: "", val: "" };
+
+        let tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${earn.label}</td>
+            <td><input value="${earn.val}" readonly></td>
+            <td>${ded.label}</td>
+            <td><input value="${ded.val}" readonly></td>
+        `;
+
+        tbody.appendChild(tr);
+    }
 }
 
 // payslip-month
@@ -62,66 +100,49 @@ function updatePayslipMonth() {
 // VARIABLE PAY
 function toggleVariablePay() {
     let enabled = document.getElementById("variablePay").value === "yes";
-
     if (enabled) {
         show("variablePayAmount");
     } else {
         hide("variablePayAmount");
         setValue("variableAmount", "");
-        setValue("variableDisplay", "");
     }
-    updateTableRowsVisibility();
     calculateSalary();
 }
 
 function updateVariablePay() {
-    let amount = getValue("variableAmount");
-    setValue("variableDisplay", amount.toFixed(2));
     calculateSalary();
 }
 
 /* BONUS */
 function toggleBonus() {
     let enabled = document.getElementById("Bonus").value === "yes";
-
     if (enabled) {
         show("BonusAmountBox");
     } else {
         hide("BonusAmountBox");
         setValue("BonusAmount", "");
-        setValue("bonusDisplay", "");
     }
-    updateTableRowsVisibility();
     calculateSalary();
 }
 
 function updateBonus() {
-    let amount = getValue("BonusAmount");
-    setValue("bonusDisplay", amount.toFixed(2));
     calculateSalary();
 }
 
 /* PROVIDENT FUND */
 function togglePF() {
     let enabled = document.getElementById("PFfield").value === "yes";
-
     if (enabled) {
         show("PFamountBox");
     } else {
         hide("PFamountBox");
         setValue("pfEmployee", "");
         setValue("pfEmployer", "");
-        setValue("displayPF", "");
     }
-    updateTableRowsVisibility();
     calculateSalary();
 }
 
 function updatePF() {
-    let employee = getValue("pfEmployee");
-    let employer = getValue("pfEmployer");
-    let totalPF = employee + employer;
-    setValue("displayPF", totalPF.toFixed(2));
     calculateSalary();
 }
 
@@ -139,7 +160,6 @@ function toggleUan() {
 /* LOP */
 function toggleLop() {
     let enabled = document.getElementById("lopdays").value === "yes";
-
     if (enabled) {
         show("Loppaydbox");
     } else {
@@ -157,14 +177,12 @@ function updatelop() {
 /* TDS */
 function toggleTds() {
     let enabled = document.getElementById("tds").value === "yes";
-
     if (enabled) {
         show("tdsAmountBox");
     } else {
         hide("tdsAmountBox");
         setValue("tdsAmount", "");
     }
-    updateTableRowsVisibility();
     calculateSalary();
 }
 
@@ -197,10 +215,9 @@ function calculateDays() {
 /* GENERATE PAYSLIP */
 function generatePayslip() {
     document.getElementById("payslipLayout").style.display = "block";
-    document.getElementById("actionToolbar").style.display = "flex"; // Shows PDF & Excel buttons under payslip
+    document.getElementById("actionToolbar").style.display = "flex";
 
     updatePayslipMonth();
-    updateTableRowsVisibility();
 
     setValue("empid", getText("AssociateID"));
     setValue("empname", getText("name"));
@@ -225,8 +242,6 @@ function generatePayslip() {
 
 /* SALARY CALCULATION */
 function calculateSalary() {
-    updateTableRowsVisibility();
-
     let annualCTC = getValue("AnnualCTC");
     let monthlyCTC = annualCTC / 12;
 
@@ -260,12 +275,6 @@ function calculateSalary() {
     let special = monthlyCTC - basic - hra - variable;
     if (special < 0) special = 0;
 
-    setValue("basicsalary", basic.toFixed(2));
-    setValue("hra", hra.toFixed(2));
-    setValue("specialallowance", special.toFixed(2));
-    setValue("variableDisplay", variable.toFixed(2));
-    setValue("bonusDisplay", bonus.toFixed(2));
-
     let totalEarnings = basic + hra + special + variable + bonus;
     setValue("totalEarnings", totalEarnings.toFixed(2));
 
@@ -273,27 +282,25 @@ function calculateSalary() {
     if (document.getElementById("PFfield").value === "yes") {
         pf = getValue("pfEmployee") + getValue("pfEmployer");
     }
-    setValue("displayPF", pf.toFixed(2));
 
     let professionalTax = 200;
-    setValue("proftax", professionalTax.toFixed(2));
 
     let incomeTax = 0;
     if (document.getElementById("tds").value === "yes") {
         incomeTax = getValue("tdsAmount");
     }
-    setValue("incometax", incomeTax.toFixed(2));
 
-    // let welfare = 100;
-    // setValue("welfare", welfare.toFixed(2));
+
 
     let totalDeduction = pf + professionalTax + incomeTax ;
     setValue("totalDeduction", totalDeduction.toFixed(2));
 
+    // Render paired single table
+    renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, incomeTax,);
+
     let netSalary = totalEarnings - totalDeduction;
     if (netSalary < 0) netSalary = 0;
 
-    // Formatted Net Pay (e.g., 174,254.00)
     let formattedNetPay = netSalary.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -355,16 +362,7 @@ function addCurrentRowToExcel() {
         "Days Payable": getValue("DaysPayable"),
         "Days Worked": getValue("DaysWorked"),
         "Annual CTC": getValue("AnnualCTC"),
-        "Basic Salary": getValue("basicsalary"),
-        "HRA": getValue("hra"),
-        "Special Allowance": getValue("specialallowance"),
-        "Variable Pay": getValue("variableDisplay"),
-        "Bonus": getValue("bonusDisplay"),
         "Total Earnings": getValue("totalEarnings"),
-        "Provident Fund": getValue("displayPF"),
-        "Professional Tax": getValue("proftax"),
-        "Income Tax (TDS)": getValue("incometax"),
-        "Welfare": getValue("welfare"),
         "Total Deductions": getValue("totalDeduction"),
         "Net Pay": document.getElementById("netpay").innerText
     };
@@ -432,8 +430,6 @@ window.onload = function () {
     hide("PFamountBox");
     hide("uanNumberBox");
     hide("tdsAmountBox");
-
-    updateTableRowsVisibility();
 };
 
 /* AUTO CALCULATE LISTENERS */
