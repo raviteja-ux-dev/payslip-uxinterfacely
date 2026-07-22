@@ -284,10 +284,10 @@ function calculateSalary() {
     }
     setValue("incometax", incomeTax.toFixed(2));
 
-    let welfare = 100;
-    setValue("welfare", welfare.toFixed(2));
+    // let welfare = 100;
+    // setValue("welfare", welfare.toFixed(2));
 
-    let totalDeduction = pf + professionalTax + incomeTax + welfare;
+    let totalDeduction = pf + professionalTax + incomeTax ;
     setValue("totalDeduction", totalDeduction.toFixed(2));
 
     let netSalary = totalEarnings - totalDeduction;
