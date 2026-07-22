@@ -15,20 +15,19 @@
         <div id="formCreation" class="form-creation">
          <div class="form-control">
             <label for="name">Name</label>
-            <input class="form-inputs" type="text" name="Name" id="name" value="" name="Name">
+            <input class="form-inputs" type="text" name="Name" id="name" value="">
          </div>
 
           <!-- Start date field-->
          <div class="form-control">
             <label for="StartDate">Start Date</label>
-            <input class="form-inputs" type="date" id="startDate" value="START DATE" name="StartDate" onchange="calculateDays()">
-            <!-- onchange="calculateDays()" -->
+            <input class="form-inputs" type="date" id="startDate" name="StartDate" onchange="calculateDays()">
          </div>
 
           <!--end date field-->         
           <div class="form-control">
             <label for="enddate">End Date</label>
-            <input class="form-inputs" type="date" id="endDate"  name="EndDate" onchange="calculateDays()">
+            <input class="form-inputs" type="date" id="endDate" name="EndDate" onchange="calculateDays()">
          </div>              
 
           <!--Designation field--> 
@@ -36,7 +35,6 @@
             <label for="Designation">Designation</label>
             <input class="form-inputs" type="text" id="Designation" value="" name="Designation">
          </div>         
-        
 
           <!--Annual Ctc field-->      
           <div class="form-control">
@@ -70,14 +68,13 @@
           <!-- payable days field -->
           <div class="form-control">
             <label for="DaysPayable">Days Payable</label>
-            <input class="form-inputs" type="number" id="DaysPayable"  readonly>
+            <input class="form-inputs" type="number" id="DaysPayable" readonly>
          </div>         
 
           <!-- working days field -->
           <div class="form-control">
             <label for="DaysWorked">Days Worked</label>
             <input class="form-inputs" type="number" id="DaysWorked" readonly>
-
          </div>  
 
           <!-- lop field --> 
@@ -95,15 +92,13 @@
               <input type="number" id="LopPayField" class="form-inputs" name="Lopdaysfield" oninput="updatelop()">               
           </div>
 
-          <!-- pan filed -->
+          <!-- pan field -->
           <div class="form-control">
             <label for="pan">PAN</label>
             <input class="form-inputs" type="text" id="pan" value="" name="pan">
          </div> 
 
-          
-          
-          <!-- variable filed -->
+          <!-- variable field -->
         <div class="form-control">
           <label for="variablePay">Variable Pay</label>
           <select id="variablePay" class="form-inputs" onchange="toggleVariablePay()">               
@@ -145,13 +140,10 @@
 
            <div class="form-control" id="PFamountBox" style="display:none;">
               <label>Employee Fund</label>
-              <input class="form-inputs" type="number"  id="pfEmployee" oninput="updatePF()">
+              <input class="form-inputs" type="number" id="pfEmployee" oninput="updatePF()">
               <label>Employer Fund</label>
               <input class="form-inputs" type="number" id="pfEmployer" oninput="updatePF()">
-              
             </div>
-
-
           
           <!-- UAN field -->
           <div class="form-control">
@@ -164,35 +156,10 @@
           </div>
 
           <!-- Hidden UAN Number -->
-          
-
           <div class="form-control" id="uanNumberBox" style="display:none;">
               <label for="uanNumber">UAN Number</label>
               <input type="number" id="uanNumber" class="form-inputs">
           </div>
-          
-          <!-- Address Field  -->
-          <!-- <div class="form-control">
-           <label for="address">Address</label>
-          <select
-            id="address"
-            class="form-inputs"
-            onchange="toggleAddress()">
-
-            <option value="">Select</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-          </div>
-         
-
-          <div class="form-control"
-            id="addDetailsBox"
-            style="display:none;">
-            <label>Address Details</label>
-            <input class="form-inputs" id="addDetails">            
-         </div> -->
-
 
           <!-- gst field -->
           <div class="form-control">
@@ -200,27 +167,28 @@
             <input class="form-inputs" id="gst" type="text" value="36AAIFU2638L1ZQ">
           </div>
 
-       
           <!-- TDS Field -->
           <div class="form-control">
             <label for="tds">TDS</label>
-            <select  id="tds" class="form-inputs" onchange="toggleTds()">           
-            <option value="">Select</option>
-                      <option value="yes">Yes</option>
-                      <option value="no">No</option>
-                  </select>
-              </div>
+            <select id="tds" class="form-inputs" onchange="toggleTds()">           
+              <option value="">Select</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+
           <!--hidden TDS field -->
           <div class="form-control" id="tdsAmountBox" style="display:none;">        
               <label>TDS Amount</label>
               <input id="tdsAmount" class="form-inputs"> 
           </div>
         </div>
-        <!-- Button - field -->
-        <div class="buttons">
-          <button type="button" onclick="generatePayslip()"> Generate Payslip </button>               
+
+        <!-- Form Button (Stays above Payslip Layout) -->
+        <div class="action-toolbar print-hide" id="formToolbar">
+          <button type="button" class="btn-primary" onclick="generatePayslip()"> Generate Payslip </button>               
         </div>
-        
+      </div>
     </form>
 
     <!-- PAYSLIP SECTION -->
@@ -231,12 +199,10 @@
             </h2>          
           </div>
 
-<!-- Employee Details  Table -->
-
+        <!-- Employee Details Table -->
         <div class="table-wrapper">
           <table id="employeeTable" class="emp-table">
           <tr>
-
             <td rowspan="4" class="logo">
               <img src="logo.png" alt="UXinterfacely Logo">
             </td>
@@ -303,12 +269,12 @@
                 <td><input id="specialallowance" readonly></td>
               </tr>
 
-              <tr id="variableRow">
+              <tr id="variableRow" style="display: none;">
                 <td>Variable Pay</td>
                 <td><input id="variableDisplay" readonly></td>
               </tr>
 
-              <tr id="bonusRow">
+              <tr id="bonusRow" style="display: none;">
                 <td>Bonus</td>
                 <td><input id="bonusDisplay" readonly></td>
               </tr>
@@ -317,7 +283,6 @@
                 <td>Total</td>
                 <td><input id="totalEarnings" readonly></td>
               </tr>
-
           </table>
           
           <table class="deductions-table">
@@ -326,7 +291,7 @@
                 <th>Current Month</th>
             </tr>
 
-            <tr id="pfRow">
+            <tr id="pfRow" style="display: none;">
                 <td>Provident Fund</td>
                 <td><input id="displayPF" readonly></td>
             </tr>
@@ -336,7 +301,7 @@
                 <td><input id="proftax" readonly></td>
             </tr>
 
-            <tr>
+            <tr id="tdsRow" style="display: none;">
                 <td>Income Tax</td>
                 <td><input id="incometax" readonly></td>
             </tr>
@@ -350,27 +315,26 @@
                 <td>Total</td>
                 <td><input id="totalDeduction" readonly></td>
             </tr>
-
           </table>
          </div>
 
-
-           <!-- Net Pay -->
-            <div class="net-pay">
-              <h2>Net Pay : ₹ <span id="netpay"> 0.00 </span> </h2>
-              <div class="amount-word">
-                Amount in Words :
-                <span id="amountWords"></span>
-              </div>
-            </div>
-          </div>
-        <div class="printbuttons">
-          <button type="button" onclick="downloadPDF()"> Download PDF </button>
-          
+        <!-- Net Pay Statement -->
+        <div class="net-pay-statement">
+          Net Pay of Rs. <span id="netpay">0.00</span> ( Rupees <span id="amountWords">Zero</span> Only ) Credited into your bank account.
         </div>
       </div>
+
+      <!-- Action Buttons Below Payslip (PDF, Add Current Row, Clear) -->
+      <div class="action-toolbar print-hide" id="actionToolbar" style="display:none;">
+        <button type="button" class="btn-pdf" onclick="downloadPDF()"> Download PDF </button>
+        <button type="button" class="btn-excel" onclick="addCurrentRowToExcel()"> Add Current Row </button>
+        <!-- <button type="button" class="btn-clear" onclick="clearExcelRows()"> Clear Stored Rows </button> -->
+      </div>
+
+   <!-- Libraries -->
    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="script.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+   <script src="script.js"></script>
   </body>
 </html>

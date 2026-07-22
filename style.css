@@ -1,257 +1,259 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-body{
-    font-family:Arial, sans-serif;
-    background:#f5f5f5;
-    padding:40px;
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 30px;
 }
 
-.payslip-form{
-  margin:24px 15px 24px 20px;
+.payslip-form {
+    margin: 24px 15px 24px 20px;
 }
+
 .main-head h4 {
-  font-size: 22px;
-  margin-bottom: 20px;
-  
-  
+    font-size: 22px;
+    margin-bottom: 20px;
 }
+
 .form-creation {
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:25px 20px;
- 
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px 20px;
 }
+
 .form-control {
-  display:flex;
-  flex-direction: column;
-  gap:6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
+
 .form-control label {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 400;
     min-height: 22px;
 }
 
 .form-inputs {
-  width:100%;
-  height: 48px;
-  padding:10px 14px;
-  border: 1px solid #999;
-  border-radius: 5px;
-  font-size: 18px;
+    width: 90%;
+    height: 38px;
+    padding: 10px 14px;
+    border: 1px solid #999;
+    border-radius: 5px;
+    font-size: 18px;
 }
 
-.buttons{
-    margin-top:35px;
-    display:block;
-    margin-left: 40px;
-    width:fit-content;
-    height:fit-content;
-
+/* Single-Row Action Toolbar */
+.action-toolbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 35px auto 20px auto;
+    width: 100%;
+    max-width: 900px;
 }
 
-.buttons button{
-    background:#0066cc;
-    color:white;
-    border:none;
-    padding:12px 25px;
-    border-radius:5px;
-    cursor:pointer;
-    font-size:18px;
-    width:100%;
+.action-toolbar button {
+    flex: 1;
+    min-width: 170px;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
 }
 
-/* pay-slip-layout */
-.payslip-layout{
-    width:279.4mm;
-    min-height:215.9mm;
-    margin:auto;
-    background:#fff;
-    padding:10mm;
-    box-sizing:border-box;
+/* Button Color Schemes & Hover Animations */
+.btn-primary {
+    background-color: #0066cc;
+}
+.btn-primary:hover {
+    background-color: #0052a3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 102, 204, 0.25);
 }
 
-.main-head{
-    display:block;
-    padding:20px;
-    margin-left:30px;
+.btn-pdf {
+    background-color: #0d6efd;
+}
+.btn-pdf:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(13, 110, 253, 0.25);
 }
 
-.main-head h2{
-    font-size:14px;
-    font-weight:700;
+.btn-excel {
+    background-color: #28a745;
+}
+.btn-excel:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(40, 167, 69, 0.25);
 }
 
-.main-head h2 input{
-    border:none;
-    outline:none;
-    width:100%;
-    background:transparent;
-    font-size:16px;
+.btn-clear {
+    background-color: #dc3545;
+}
+.btn-clear:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(220, 53, 69, 0.25);
 }
 
-.table-wrapper{
-    margin-left:0;
+/* Pay Slip Layout */
+.payslip-layout {
+    width: 279.4mm;
+    min-height: 215.9mm;
+    margin: auto;
+    background: #fff;
+    padding: 10mm;
+    box-sizing: border-box;
 }
 
-.emp-table{
-    width:100%;
-    border-collapse:collapse;
-    
+.main-head {
+    display: block;
+    padding: 20px;
+    margin-left: 30px;
+}
+
+.main-head h2 {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.main-head h2 input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    font-size: 16px;
+}
+
+.table-wrapper {
+    margin-left: 0;
+}
+
+.emp-table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
 .emp-table th,
-.emp-table td{
-    padding:12px;
-    border:1.5px solid;
-    font-size:16px;
-    text-align:justify;
-    font-weight:bold;
-}
-
-.emp-table td input{
-    border:none;
-    outline:none;
-    width:100%;
-    background:transparent;
-    font-size:16px;
+.emp-table td {
+    padding: 12px;
+    border: 1.5px solid #000;
+    font-size: 16px;
+    text-align: justify;
     font-weight: bold;
 }
 
-.logo{
-    width:180px;
-    text-align:center;
-    vertical-align:top;
+.emp-table td input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    font-size: 16px;
+    font-weight: bold;
 }
 
-.logo img{
-    width:160px;
-}
-/* Working Days */
-.working-days{
-    margin-top:10px;
-    margin-left:50px;
-}
-/* Days calculation */
-.days-calculation{
-    border-collapse:collapse;
-    width:100%;
+.logo {
+    width: 180px;
+    text-align: center;
+    vertical-align: top;
 }
 
-.days-calculation th,
-.days-calculation td{
-    padding:12px;
-    border:1.5px solid;
-    font-size:13px;
-    font-weight:bold;
+.logo img {
+    width: 160px;
 }
 
-.days-calculation td input{
-    border:none;
-    outline:none;
-    width:100%;
-    background:transparent;
-    font-size:16px;
-}
-
-
-.salary-container{
-    display:flex;
-    gap:10px;
-    width:100%;
-  
+.salary-container {
+    display: flex;
+    gap: 10px;
+    width: 100%;
 }
 
 .earnings-table,
-.deductions-table{
-    margin-top:10px;
-    width:50%;
-    border-collapse:collapse;
+.deductions-table {
+    margin-top: 10px;
+    width: 50%;
+    border-collapse: collapse;
 }
 
 .earnings-table th,
 .earnings-table td,
 .deductions-table th,
-.deductions-table td{
-
-    border:1px solid #000;
-    padding:8px;
+.deductions-table td {
+    border: 1px solid #000;
+    padding: 8px;
     font-weight: bold;
 }
 
 .earnings-table th,
-.deductions-table th{
-
-    background:#e8e8e8;
+.deductions-table th {
+    background: #e8e8e8;
 }
 
-/* net pay */
-.net-pay{
-    margin:20px 0 0 0;
-}
-
-.net-pay h2{
-    font-size:16px;
-    font-weight:700;
-}
-
-.amount-word{
-    margin-top:15px;
-    font-size:14px;
-    font-weight:bold;
-}
-
-.printbuttons{
-    margin-top:20px;
-    display:block;
-    margin-left: 40px;
-    width:fit-content;
-    height:fit-content;
-    font-size: 22px;
-}
-
-.printbuttons button{
-    background:#0066cc;
-    color:white;
-    border:none;
-    padding:12px 25px;
-    border-radius:5px;
-    cursor:pointer;
-    font-size:18px;
-    width:100%;
-    text-align: center;
-}
 .earnings-table td input,
 .earnings-table th input,
 .deductions-table td input,
-.deductions-table th input{
-    width:100%;
-    border:none;
-    outline:none;
-    background:transparent;
-    box-shadow:none;
-    text-align:center;
-    font-size:16px;
-    font-weight:bold;
+.deductions-table th input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    box-shadow: none;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
 }
 
-@media print{
-
-.printbuttons{
-
-display:none;
-
+/* Net Pay Statement */
+.net-pay-statement {
+    margin-top: 18px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: bold;
+    color: #000;
+    font-family: Arial, sans-serif;
+    letter-spacing: 0.1px;
 }
 
+@media print {
+    .print-hide,
+    .action-toolbar {
+        display: none !important;
+    }
 }
 
-/* 
-#pfHead,
-#pfFundBox {
-    display: none;
-} */
+/* Responsive Alignment */
+@media screen and (max-width: 1024px) {
+    .action-toolbar {
+        flex-wrap: wrap;
+    }
+    .action-toolbar button {
+        flex: 1 1 45%;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .action-toolbar {
+        flex-direction: column;
+    }
+    .action-toolbar button {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+}
