@@ -24,7 +24,7 @@ function hide(id) {
    SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW)
 ============================================================ */
 
-function renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, incomeTax, ) {
+function renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, TDS, ) {
     // 1. Build list of active Earnings
     let earningsList = [
         { label: "Basic Salary", val: basic.toFixed(2) },
@@ -50,7 +50,7 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pf, professiona
     deductionsList.push({ label: "Professional Tax", val: professionalTax.toFixed(2) });
 
     if (document.getElementById("tds").value === "yes") {
-        deductionsList.push({ label: "Income Tax", val: incomeTax.toFixed(2) });
+        deductionsList.push({ label: "TDS", val: TDS.toFixed(2) });
     }
 
     
@@ -285,18 +285,18 @@ function calculateSalary() {
 
     let professionalTax = 200;
 
-    let incomeTax = 0;
+    let TDS = 0;
     if (document.getElementById("tds").value === "yes") {
-        incomeTax = getValue("tdsAmount");
+        TDS = getValue("tdsAmount");
     }
 
 
 
-    let totalDeduction = pf + professionalTax + incomeTax ;
+    let totalDeduction = pf + professionalTax + TDS ;
     setValue("totalDeduction", totalDeduction.toFixed(2));
 
     // Render paired single table
-    renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, incomeTax,);
+    renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, TDS,);
 
     let netSalary = totalEarnings - totalDeduction;
     if (netSalary < 0) netSalary = 0;
