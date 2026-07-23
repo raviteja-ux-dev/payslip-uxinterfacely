@@ -238,6 +238,75 @@ function generatePayslip() {
         top: document.getElementById("payslipLayout").offsetTop,
         behavior: "smooth"
     });
+    saveEmployeeToDatabase();
+}
+
+/* ========== database saving ========*/
+async function saveEmployeeToDatabase() {
+
+    const employee = {
+        employee_name: getText("name"),
+        associate_id: getText("AssociateID"),
+        designation: getText("Designation"),
+        department: getText("Department"),
+        location: getText("location"),
+
+        start_date: document.getElementById("startDate").value,
+        end_date: document.getElementById("endDate").value,
+        join_date: document.getElementById("JoinDate").value,
+
+        days_payable: Number(document.getElementById("DaysPayable").value) || 0,
+        days_worked: Number(document.getElementById("DaysWorked").value) || 0,
+        lop_days: Number(document.getElementById("LopPayField").value) || 0,
+
+        annual_ctc: Number(getText("AnnualCTC")) || 0,
+
+        variable_pay: Number(document.getElementById("variableAmount").value) || 0,
+        bonus: Number(document.getElementById("BonusAmount").value) || 0,
+
+        pf_employee: Number(document.getElementById("pfEmployee").value) || 0,
+        pf_employer: Number(document.getElementById("pfEmployer").value) || 0,
+
+        pan: getText("pan"),
+        uan: getText("uanNumber"),
+        gst: document.getElementById("gst").value,
+
+        tds: Number(document.getElementById("tdsAmount").value) || 0,
+
+        total_earnings: Number(document.getElementById("totalEarnings").value) || 0,
+        total_deductions: Number(document.getElementById("totalDeduction").value) || 0,
+
+        net_salary: Number(document.getElementById("netpay").innerText) || 0
+    };
+
+    try {
+
+        const response = await fetch("http://localhost:3000/employee", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(employee)
+
+        });
+
+        const result = await response.json();
+
+        console.log(result);
+
+        alert("Employee saved successfully!");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Unable to save employee.");
+
+    }
+
 }
 
 /* SALARY CALCULATION */
@@ -334,6 +403,51 @@ function numberToWords(num) {
     }
 
     return convert(num).replace(/\s+/g, " ").trim();
+}
+
+/* print - button */
+
+async function printPayslip() {
+    const { jsPDF } = window.jspdf;
+    const payslip = document.getElementById("payslipLayout");
+
+    const canvas = await html2canvas(payslip, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "letter"
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    let y = 0;
+    if (imgHeight < pageHeight) {
+        y = (pageHeight - imgHeight) / 2;
+    }
+
+    pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
+
+    // Open PDF in new window
+    const blob = pdf.output("blob");
+    const blobUrl = URL.createObjectURL(blob);
+
+    const printWindow = window.open(blobUrl);
+
+    printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+    };
 }
 
 /* EXPORT / ADD CURRENT ROW TO EXCEL */
