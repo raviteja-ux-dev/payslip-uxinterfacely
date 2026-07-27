@@ -20,6 +20,11 @@ function hide(id) {
     document.getElementById(id).style.display = "none";
 }
 
+/* ========================EXCEL UPLOAD VARIABLES ==================================*/
+
+let employees = [];
+let currentEmployeeIndex = 0; 
+
 /* ============================================================
    SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW)
 ============================================================ */
@@ -542,6 +547,245 @@ async function downloadPDF() {
 
     pdf.save(`${employee}_${month}_Payslip.pdf`);
 }
+
+/* Upload excel sheet to generate Payslip's automatically */
+
+function loadEmployee(index) {
+
+    if (employees.length === 0) return;
+
+    const emp = employees[index];
+    console.log("Employee Loaded:", emp);
+    console.log("Available Columns:", Object.keys(emp));
+
+    // Basic Details
+    document.getElementById("AssociateID").value = emp["Associate ID"] || "";
+    document.getElementById("name").value = emp["Employee Name"] || "";
+    document.getElementById("Designation").value = emp["Designation"] || "";
+    document.getElementById("Department").value = emp["Department"] || "";
+    document.getElementById("location").value = emp["Location"] || "";
+    document.getElementById("AnnualCTC").value = emp["Annual CTC"] || "";
+
+    document.getElementById("startDate").value = emp["Start Date"] || "";
+    document.getElementById("endDate").value = emp["End Date"] || "";
+    document.getElementById("JoinDate").value = emp["Join Date"] || "";
+
+    document.getElementById("pan").value = emp["PAN"] || "";
+
+    // ---------------- Variable Pay --------
+
+    if (Number(emp["Variable Pay"]) > 0) {
+
+        document.getElementById("variablePay").value = "yes";
+        toggleVariablePay();
+
+        document.getElementById("variableAmount").value =
+            emp["Variable Pay"];
+
+    } else {
+
+        document.getElementById("variablePay").value = "no";
+        toggleVariablePay();
+
+    }
+
+    // ------------ Bonus ------------
+   
+    if (Number(emp["Bonus"]) > 0) {
+
+        document.getElementById("Bonus").value = "yes";
+        toggleBonus();
+
+        document.getElementById("BonusAmount").value =
+            emp["Bonus"];
+
+    } else {
+
+        document.getElementById("Bonus").value = "no";
+        toggleBonus();
+
+    }
+
+    // ------------- PF -----------   
+
+    if (
+        Number(emp["PF Employee"]) > 0 ||
+        Number(emp["PF Employer"]) > 0
+    ) {
+
+        document.getElementById("PFfield").value = "yes";
+        togglePF();
+
+        document.getElementById("pfEmployee").value =
+            emp["PF Employee"] || 0;
+
+        document.getElementById("pfEmployer").value =
+            emp["PF Employer"] || 0;
+
+    } else {
+
+        document.getElementById("PFfield").value = "no";
+        togglePF();
+
+    }
+
+    // ----------- TDS -------------
+
+    if (Number(emp["TDS"]) > 0) {
+
+        document.getElementById("tds").value = "yes";
+        toggleTds();
+
+        document.getElementById("tdsAmount").value =
+            emp["TDS"];
+
+    } else {
+
+        document.getElementById("tds").value = "no";
+        toggleTds();
+
+    }
+
+    // ----------- UAN -------------  
+
+    if (emp["UAN"]) {
+
+        document.getElementById("UAN").value = "yes";
+        toggleUan();
+
+        document.getElementById("uanNumber").value =
+            emp["UAN"];
+
+    } else {
+
+        document.getElementById("UAN").value = "no";
+        toggleUan();
+
+    }
+
+    // ----------- LOP -------------
+
+    if (Number(emp["LOP Days"]) > 0) {
+
+        document.getElementById("lopdays").value = "yes";
+        toggleLop();
+
+        document.getElementById("LopPayField").value =
+            emp["LOP Days"];
+
+    } else {
+
+        document.getElementById("lopdays").value = "no";
+        toggleLop();
+
+    }
+
+    calculateDays();
+    calculateSalary();
+
+    updateNavigation();
+}
+
+// ========= Update Navigation ==========
+    function updateNavigation() {
+
+    document.getElementById("currentEmployee").innerText =
+        `Payslip ${currentEmployeeIndex + 1} of ${employees.length}`;
+
+    document.getElementById("prevEmployee").disabled =
+        currentEmployeeIndex === 0;
+
+    document.getElementById("nextEmployee").disabled =
+        currentEmployeeIndex === employees.length - 1;
+
+}
+
+// ============ previous button in excel ============
+    document.getElementById("prevEmployee").addEventListener("click", function () {
+
+    if (currentEmployeeIndex > 0) {
+
+        currentEmployeeIndex--;
+
+        loadEmployee(currentEmployeeIndex);
+
+    }
+
+});
+
+// ============= Next button excel ============
+    document.getElementById("nextEmployee").addEventListener("click", function () {
+
+    if (currentEmployeeIndex < employees.length - 1) {
+
+        currentEmployeeIndex++;
+
+        loadEmployee(currentEmployeeIndex);
+
+    }
+
+});
+
+
+/* ==========================================================
+   EXCEL FILE UPLOAD
+========================================================== */
+
+const excelInput = document.getElementById("excelFile");
+
+if (excelInput) {
+
+    excelInput.addEventListener("change", function (e) {
+
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+
+            const data = new Uint8Array(event.target.result);
+
+            const workbook = XLSX.read(data, {
+                type: "array"
+            });
+
+            const firstSheet = workbook.SheetNames[0];
+
+            const worksheet = workbook.Sheets[firstSheet];
+
+            employees = XLSX.utils.sheet_to_json(worksheet, {
+                defval: ""
+            });
+            
+            console.log("Employees:", employees);
+            console.log("Total Employees:", employees.length);
+
+            currentEmployeeIndex = 0;
+
+            document.getElementById("excelCount").innerText = employees.length;
+                
+
+            if (employees.length > 0) {
+
+                loadEmployee(0);
+
+            } else {
+
+                alert("No employee records found in Excel.");
+
+            }
+
+        };
+
+        reader.readAsArrayBuffer(file);
+
+    });
+
+}
+
+
 
 /* INITIAL LOAD */
 window.onload = function () {

@@ -211,6 +211,66 @@ body {
     letter-spacing: 0.1px;
 }
 
+/* ================= Excel Upload ================= */
+
+.excel-section {
+    margin-top: 25px;
+    width: 100%;
+}
+
+.excel-section label {
+    display: block;
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 8px;
+}
+
+.excel-section input[type="file"] {
+    width: 420px;
+    padding: 8px;
+    border: 1px solid #bbb;
+    border-radius: 5px;
+    background: #fff;
+}
+
+#excelCountText {
+    margin-top: 12px;
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.excel-navigation {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.excel-navigation button {
+    padding: 10px 22px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background: #0d6efd;
+    color: white;
+    cursor: pointer;
+    transition: .3s;
+}
+
+.excel-navigation button:hover {
+    background: #084298;
+}
+
+.excel-navigation button:disabled {
+    background: #bdbdbd;
+    cursor: not-allowed;
+}
+
+#currentEmployee {
+    font-size: 18px;
+    font-weight: 600;
+}
+
 @media print {
     .print-hide,
     .action-toolbar {
