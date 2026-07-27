@@ -233,12 +233,12 @@ function generatePayslip() {
     }
 
     calculateDays();
-
+    saveEmployeeToDatabase();
     window.scrollTo({
         top: document.getElementById("payslipLayout").offsetTop,
         behavior: "smooth"
     });
-    saveEmployeeToDatabase();
+    
 }
 
 /* ========== database saving ========*/
@@ -276,12 +276,18 @@ async function saveEmployeeToDatabase() {
         total_earnings: Number(document.getElementById("totalEarnings").value) || 0,
         total_deductions: Number(document.getElementById("totalDeduction").value) || 0,
 
-        net_salary: Number(document.getElementById("netpay").innerText) || 0
+        // net_salary: Number(document.getElementById("netpay").innerText) || 0
+        net_salary: parseFloat(
+            document.getElementById("netpay").innerText.replace(/,/g, "")
+        ) || 0
+
     };
 
     try {
-
-        const response = await fetch("http://localhost:3000/employee", {
+        console.log("Net Pay:", document.getElementById("netpay").innerText);
+        console.log(employee);
+        const response = await fetch("https://payslip-uxinterfacely.onrender.com/employee", {
+        // const response = await fetch("http://localhost:3000/employee", {
 
             method: "POST",
 
