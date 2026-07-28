@@ -25,9 +25,7 @@ function hide(id) {
 let employees = [];
 let currentEmployeeIndex = 0; 
 
-/* ============================================================
-   SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW)
-============================================================ */
+/* ============  SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW) ======================*/
 
 function renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, TDS, ) {
     // 1. Build list of active Earnings
@@ -57,8 +55,6 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pf, professiona
     if (document.getElementById("tds").value === "yes") {
         deductionsList.push({ label: "TDS", val: TDS.toFixed(2) });
     }
-
-    
 
     // 3. Render rows into the single table
     let tbody = document.getElementById("salaryTableBody");
@@ -218,7 +214,7 @@ function calculateDays() {
 }
 
 /* GENERATE PAYSLIP */
-function generatePayslip() {
+async function generatePayslip() {
     document.getElementById("payslipLayout").style.display = "block";
     document.getElementById("actionToolbar").style.display = "flex";
 
@@ -238,7 +234,9 @@ function generatePayslip() {
     }
 
     calculateDays();
-    saveEmployeeToDatabase();
+    calculateSalary();    
+    await saveEmployeeToDatabase();
+
     window.scrollTo({
         top: document.getElementById("payslipLayout").offsetTop,
         behavior: "smooth"
@@ -280,8 +278,7 @@ async function saveEmployeeToDatabase() {
 
         total_earnings: Number(document.getElementById("totalEarnings").value) || 0,
         total_deductions: Number(document.getElementById("totalDeduction").value) || 0,
-
-        // net_salary: Number(document.getElementById("netpay").innerText) || 0
+        
         net_salary: parseFloat(
             document.getElementById("netpay").innerText.replace(/,/g, "")
         ) || 0
@@ -291,6 +288,9 @@ async function saveEmployeeToDatabase() {
     try {
         console.log("Net Pay:", document.getElementById("netpay").innerText);
         console.log(employee);
+        console.log("Employee object being sent:");
+        console.log(JSON.stringify(employee, null, 2));
+
         const response = await fetch("https://payslip-uxinterfacely.onrender.com/employee", {
         // const response = await fetch("http://localhost:3000/employee", {
 
@@ -370,8 +370,6 @@ function calculateSalary() {
         TDS = getValue("tdsAmount");
     }
 
-
-
     let totalDeduction = pf + professionalTax + TDS ;
     setValue("totalDeduction", totalDeduction.toFixed(2));
 
@@ -419,6 +417,11 @@ function numberToWords(num) {
 /* print - button */
 
 async function printPayslip() {
+
+    // Hide action buttons
+    const toolbar = document.getElementById("actionToolbar");
+    toolbar.style.display = "none";
+
     const { jsPDF } = window.jspdf;
     const payslip = document.getElementById("payslipLayout");
 
@@ -427,6 +430,9 @@ async function printPayslip() {
         useCORS: true,
         backgroundColor: "#ffffff"
     });
+
+    // Show buttons again
+    toolbar.style.display = "flex";
 
     const imgData = canvas.toDataURL("image/png");
 
@@ -513,6 +519,10 @@ function clearExcelRows() {
 
 /* PDF DOWNLOAD */
 async function downloadPDF() {
+
+    const toolbar = document.getElementById("actionToolbar");
+    toolbar.style.display = "none";
+
     const { jsPDF } = window.jspdf;
     const payslip = document.getElementById("payslipLayout");
 
@@ -522,7 +532,10 @@ async function downloadPDF() {
         backgroundColor: "#ffffff"
     });
 
+    toolbar.style.display = "flex";
+
     const imgData = canvas.toDataURL("image/png");
+
     const pdf = new jsPDF({
         orientation: "landscape",
         unit: "mm",
@@ -536,6 +549,7 @@ async function downloadPDF() {
     const imgHeight = canvas.height * imgWidth / canvas.width;
 
     let y = 0;
+
     if (imgHeight < pageHeight) {
         y = (pageHeight - imgHeight) / 2;
     }
@@ -548,6 +562,35 @@ async function downloadPDF() {
     pdf.save(`${employee}_${month}_Payslip.pdf`);
 }
 
+
+// loading excel date formats 
+function formatExcelDate(value) {
+
+    if (!value) return "";
+
+    // Excel serial number
+    if (typeof value === "number") {
+        const date = XLSX.SSF.parse_date_code(value);
+
+        return `${date.y}-${String(date.m).padStart(2, "0")}-${String(date.d).padStart(2, "0")}`;
+    }
+
+    // Already yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value))
+        return value;
+
+    // dd/mm/yyyy or dd-mm-yyyy
+    let parts = value.toString().split(/[\/-]/);
+
+    if (parts.length == 3) {
+
+        return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+
+    }
+
+    return "";
+}
+
 /* Upload excel sheet to generate Payslip's automatically */
 
 function loadEmployee(index) {
@@ -555,32 +598,37 @@ function loadEmployee(index) {
     if (employees.length === 0) return;
 
     const emp = employees[index];
-    console.log("Employee Loaded:", emp);
-    console.log("Available Columns:", Object.keys(emp));
 
-    // Basic Details
-    document.getElementById("AssociateID").value = emp["Associate ID"] || "";
-    document.getElementById("name").value = emp["Employee Name"] || "";
-    document.getElementById("Designation").value = emp["Designation"] || "";
-    document.getElementById("Department").value = emp["Department"] || "";
-    document.getElementById("location").value = emp["Location"] || "";
-    document.getElementById("AnnualCTC").value = emp["Annual CTC"] || "";
+    // ============= BASIC DETAILS ==================
 
-    document.getElementById("startDate").value = emp["Start Date"] || "";
-    document.getElementById("endDate").value = emp["End Date"] || "";
-    document.getElementById("JoinDate").value = emp["Join Date"] || "";
+    setValue("name", emp["Employee Name"] || "");
+    setValue("AssociateID", emp["Associate ID"] || "");
+    setValue("Designation", emp["Designation"] || "");
+    setValue("Department", emp["Department"] || "");
+    setValue("location", emp["Location"] || "");
 
-    document.getElementById("pan").value = emp["PAN"] || "";
+    setValue("AnnualCTC", emp["Annual CTC"] || "");
 
-    // ---------------- Variable Pay --------
+    console.log("Start Date:", emp["Start Date"]);
+    console.log("End Date:", emp["End Date"]);
+    console.log("Join Date:", emp["Join Date"]);
 
-    if (Number(emp["Variable Pay"]) > 0) {
+    setValue("startDate", formatExcelDate(emp["Start Date"]));
+    setValue("endDate", formatExcelDate(emp["End Date"]));
+    setValue("JoinDate", formatExcelDate(emp["Join Date"]));
+
+    setValue("pan", emp["PAN"] || "");
+
+    // ================  VARIABLE PAY ===============
+
+    let variable = Number(emp["Variable Pay"]) || 0;
+
+    if (variable > 0) {
 
         document.getElementById("variablePay").value = "yes";
         toggleVariablePay();
 
-        document.getElementById("variableAmount").value =
-            emp["Variable Pay"];
+        setValue("variableAmount", variable);
 
     } else {
 
@@ -589,15 +637,16 @@ function loadEmployee(index) {
 
     }
 
-    // ------------ Bonus ------------
-   
-    if (Number(emp["Bonus"]) > 0) {
+    // =========== BONUS ===========
+  
+    let bonus = Number(emp["Bonus"]) || 0;
+
+    if (bonus > 0) {
 
         document.getElementById("Bonus").value = "yes";
         toggleBonus();
 
-        document.getElementById("BonusAmount").value =
-            emp["Bonus"];
+        setValue("BonusAmount", bonus);
 
     } else {
 
@@ -606,21 +655,18 @@ function loadEmployee(index) {
 
     }
 
-    // ------------- PF -----------   
+    // ============== PF =================
 
-    if (
-        Number(emp["PF Employee"]) > 0 ||
-        Number(emp["PF Employer"]) > 0
-    ) {
+    let pfEmp = Number(emp["PF Employee"]) || 0;
+    let pfEmployer = Number(emp["PF Employer"]) || 0;
+
+    if (pfEmp > 0 || pfEmployer > 0) {
 
         document.getElementById("PFfield").value = "yes";
         togglePF();
 
-        document.getElementById("pfEmployee").value =
-            emp["PF Employee"] || 0;
-
-        document.getElementById("pfEmployer").value =
-            emp["PF Employer"] || 0;
+        setValue("pfEmployee", pfEmp);
+        setValue("pfEmployer", pfEmployer);
 
     } else {
 
@@ -629,15 +675,16 @@ function loadEmployee(index) {
 
     }
 
-    // ----------- TDS -------------
+    // =============== TDS ================
 
-    if (Number(emp["TDS"]) > 0) {
+    let tds = Number(emp["TDS"]) || 0;
+
+    if (tds > 0) {
 
         document.getElementById("tds").value = "yes";
         toggleTds();
 
-        document.getElementById("tdsAmount").value =
-            emp["TDS"];
+        setValue("tdsAmount", tds);
 
     } else {
 
@@ -646,15 +693,18 @@ function loadEmployee(index) {
 
     }
 
-    // ----------- UAN -------------  
 
-    if (emp["UAN"]) {
+
+    // ================  UAN ===============
+
+    let uan = emp["UAN"] || "";
+
+    if (uan !== "") {
 
         document.getElementById("UAN").value = "yes";
         toggleUan();
 
-        document.getElementById("uanNumber").value =
-            emp["UAN"];
+        setValue("uanNumber", uan);
 
     } else {
 
@@ -663,15 +713,18 @@ function loadEmployee(index) {
 
     }
 
-    // ----------- LOP -------------
 
-    if (Number(emp["LOP Days"]) > 0) {
+
+    // ================== LOP =============
+
+    let lop = Number(emp["LOP Days"]) || 0;
+
+    if (lop > 0) {
 
         document.getElementById("lopdays").value = "yes";
         toggleLop();
 
-        document.getElementById("LopPayField").value =
-            emp["LOP Days"];
+        setValue("LopPayField", lop);
 
     } else {
 
@@ -679,6 +732,10 @@ function loadEmployee(index) {
         toggleLop();
 
     }
+
+
+
+    // =============== RECALCULATE ================
 
     calculateDays();
     calculateSalary();
@@ -727,9 +784,7 @@ function loadEmployee(index) {
 });
 
 
-/* ==========================================================
-   EXCEL FILE UPLOAD
-========================================================== */
+// ========================= EXCEL FILE UPLOAD =================================
 
 const excelInput = document.getElementById("excelFile");
 
@@ -758,7 +813,7 @@ if (excelInput) {
             employees = XLSX.utils.sheet_to_json(worksheet, {
                 defval: ""
             });
-            
+
             console.log("Employees:", employees);
             console.log("Total Employees:", employees.length);
 
@@ -785,7 +840,53 @@ if (excelInput) {
 
 }
 
+// =========== Download excel template ============
+document.getElementById("downloadTemplate").addEventListener("click", downloadExcelTemplate);
 
+function downloadExcelTemplate() {
+
+    const template = [
+
+        {
+
+            "Employee Name": "",
+            "Associate ID": "",
+            "Designation": "",
+            "Department": "",
+            "Location": "",
+
+            "Annual CTC": "",
+
+            "Start Date": "",
+            "End Date": "",
+            "Join Date": "",
+
+            "LOP Days": "",
+
+            "PAN": "",
+            "UAN": "",
+
+            "Variable Pay": "",
+            "Bonus": "",
+
+            "PF Employee": "",
+            "PF Employer": "",
+
+            "TDS": ""
+
+        }
+
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(template);
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employee Template");
+
+    XLSX.writeFile(workbook, "Payslip_Employee_Template.xlsx");
+
+}
 
 /* INITIAL LOAD */
 window.onload = function () {

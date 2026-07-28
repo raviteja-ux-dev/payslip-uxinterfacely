@@ -191,11 +191,12 @@
         <div class="excel-section">
           <label>Upload Excel</label>
           <input type="file" id="excelFile" accept=".xlsx,.xls">
+          <button type="button" id="downloadTemplate">Download Excel Template</button> 
           <p>Excel Entries :<span id="excelCount">0</span></p>
           <div class="excel-navigation">
-            <button id="prevEmployee"  >Previous</button>
+            <button type="button" id="prevEmployee"  >Previous</button>
             <span id="currentEmployee">Payslip 0 of 0</span>
-            <button id="nextEmployee">Next</button>
+            <button type="button" id="nextEmployee">Next</button>
           </div>         
         </div>   
       </div>
@@ -282,6 +283,10 @@
         <!-- Net Pay Statement -->
         <div class="net-pay-statement">
           Net Pay of Rs. <span id="netpay">0.00</span> ( Rupees <span id="amountWords">Zero</span> Only ) Credited into your bank account.
+        </div>
+        <div class="payslip-footer">
+          <hr>
+          <p>This is a computer generated payslip and does not require any signature.</p>
         </div>
       <!-- Action Buttons Toolbar -->
       <div class="action-toolbar print-hide" id="actionToolbar" style="display:none;">
