@@ -438,7 +438,7 @@ async function saveEmployeeToDatabase() {
 
     const employee = {
 
-        associate_id: getText("AssociateID"),
+        associate_id: getText("AssociateID").trim().toUpperCase(),
         employee_name: getText("name"),
         designation: getText("Designation"),
         department: getText("Department"),
@@ -483,7 +483,7 @@ async function saveEmployeeToDatabase() {
 
     const payslip = {
 
-        associate_id: getText("AssociateID"),
+       associate_id: getText("AssociateID").trim().toUpperCase(),
 
         start_date: document.getElementById("startDate").value,
         end_date: document.getElementById("endDate").value,

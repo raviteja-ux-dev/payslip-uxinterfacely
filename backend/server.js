@@ -161,7 +161,7 @@ app.get("/payslips/:associateId", async (req, res) => {
 
     try {
 
-        const associateId = req.params.associateId;
+        const associateId = req.params.associateId.trim().toUpperCase();
 
         const { data, error } = await supabase
             .from("payslips")
