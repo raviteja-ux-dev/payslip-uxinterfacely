@@ -155,7 +155,40 @@ app.get("/payslips", async (req, res) => {
 
 });
 
+// ================== Employee Payslip History =====================
 
+app.get("/payslips/:associateId", async (req, res) => {
+
+    try {
+
+        const associateId = req.params.associateId;
+
+        const { data, error } = await supabase
+            .from("payslips")
+            .select("*")
+            .eq("associate_id", associateId)
+            .order("pay_year", { ascending: false })
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error(error);
+            return res.status(500).json(error);
+        }
+
+        res.json(data);
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
+
+});
 
 // =======================================
 // View Employees
