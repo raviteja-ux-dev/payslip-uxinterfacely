@@ -626,7 +626,7 @@ async function searchPayslipHistory() {
                     </div>
 
                     <div class="history-buttons">
-                        <button onclick="viewPayslip(${item.id})"> View </button> 
+                        <button onclick="viewPayslip(${p.id})">View</button> 
                     </div>
 
                 </div>
