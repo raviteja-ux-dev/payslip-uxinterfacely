@@ -304,10 +304,66 @@ body {
 
 }
 
+/* ===================================================
+   Employee Payslip History
+=================================================== */
+
+.history-container{
+    width:95%;
+    margin:30px auto;
+    background:#fff;
+    border-radius:8px;
+    padding:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.history-container h3{
+    margin-bottom:20px;
+}
+
+.history-search{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.history-search input{
+    flex:1;
+    height:42px;
+    padding:10px;
+    font-size:16px;
+}
+
+.history-search button{
+    width:120px;
+}
+
+.history-card{
+    border:1px solid #ddd;
+    border-radius:6px;
+    padding:15px;
+    margin-bottom:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.history-info{
+    line-height:26px;
+}
+
+.history-buttons{
+    display:flex;
+    gap:10px;
+}
+
+.history-buttons button{
+    padding:8px 15px;
+    cursor:pointer;
+}
+
 #downloadTemplate:hover{
-
     background:#1d4ed8;
-
 }
 
 @media print {

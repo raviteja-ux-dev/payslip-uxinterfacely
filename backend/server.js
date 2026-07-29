@@ -210,6 +210,26 @@ app.get("/employees", async (req, res) => {
 });
 
 
+// =======================================
+// Get Single Payslip
+// =======================================
+
+app.get("/payslip/:id", async (req, res) => {
+
+    const { data, error } = await supabase
+        .from("payslips")
+        .select("*")
+        .eq("id", req.params.id)
+        .single();
+
+    if (error) {
+        return res.status(500).json(error);
+    }
+
+    res.json(data);
+
+});
+
 
 // =======================================
 // Start Server

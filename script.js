@@ -574,6 +574,105 @@ async function saveEmployeeToDatabase() {
 
 }
 
+async function searchPayslipHistory() {
+
+    let associateId =
+        document.getElementById("historyAssociateId")
+        .value
+        .trim()
+        .toUpperCase();
+
+    if (!associateId) {
+
+        alert("Enter Associate ID");
+
+        return;
+
+    }
+
+    try {
+
+        const response = await fetch(
+
+            `https://payslip-uxinterfacely.onrender.com/payslips/${associateId}`
+
+        );
+
+        const payslips = await response.json();
+
+        let html = "";
+
+        if (payslips.length === 0) {
+
+            html = "<h4>No Payslips Found</h4>";
+
+        }
+
+        else {
+
+            payslips.forEach((p,index)=>{
+
+                html += `
+
+                <div class="history-card">
+
+                    <div class="history-info">
+
+                        <strong>${p.pay_month} ${p.pay_year}</strong><br>
+
+                        Net Salary :
+                        ₹${Number(p.net_salary).toLocaleString()}
+
+                    </div>
+
+                    <div class="history-buttons">
+                        <button onclick="viewPayslip(${item.id})"> View </button> 
+                    </div>
+
+                </div>
+
+                `;
+
+            });
+
+        }
+
+        document.getElementById("historyResult").innerHTML = html;
+
+        window.historyPayslips = payslips;
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+    }
+
+}
+//  ============= Function view payslip =============
+async function viewPayslip(id) {
+
+    try {
+
+        const response = await fetch(
+            `https://payslip-uxinterfacely.onrender.com/payslip/${id}`
+        );
+
+        const payslip = await response.json();
+
+        console.log("Selected Payslip:");
+
+        console.log(payslip);
+
+    }
+    catch (err) {
+
+        console.error(err);
+
+    }
+
+}
 
 /* SALARY CALCULATION */
 function calculateSalary() {
