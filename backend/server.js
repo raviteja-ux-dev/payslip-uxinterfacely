@@ -209,24 +209,65 @@ app.get("/employees", async (req, res) => {
 
 });
 
-
-// =======================================
-// Get Single Payslip
-// =======================================
+// ================== Get Single Payslip + Employee Details =====================
 
 app.get("/payslip/:id", async (req, res) => {
 
-    const { data, error } = await supabase
-        .from("payslips")
-        .select("*")
-        .eq("id", req.params.id)
-        .single();
+    try {
 
-    if (error) {
-        return res.status(500).json(error);
+        // -------------------------
+        // Get Payslip
+        // -------------------------
+
+        const { data: payslip, error: payslipError } = await supabase
+            .from("payslips")
+            .select("*")
+            .eq("id", req.params.id)
+            .single();
+
+        if (payslipError) {
+            return res.status(500).json(payslipError);
+        }
+
+        // -------------------------
+        // Get Employee
+        // -------------------------
+
+        const { data: employee, error: employeeError } = await supabase
+            .from("employees")
+            .select("*")
+            .eq("associate_id", payslip.associate_id)
+            .single();
+
+        if (employeeError) {
+            return res.status(500).json(employeeError);
+        }
+
+        // -------------------------
+        // Merge both objects
+        // -------------------------
+
+        const result = {
+
+            ...employee,
+
+            ...payslip
+
+        };
+
+        res.json(result);
+
     }
+    catch (err) {
 
-    res.json(data);
+        console.error(err);
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
 
 });
 
