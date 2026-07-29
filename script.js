@@ -433,9 +433,8 @@ function showGeneratedPayslip(index) {
 /* ========== save employee  to database ========*/
 async function saveEmployeeToDatabase() {
 
-    // ==========================
-    // Employee Master
-    // ==========================
+    // ============= Employee Master =============
+   
 
     const employee = {
 
@@ -447,12 +446,37 @@ async function saveEmployeeToDatabase() {
 
         pan: getText("pan"),
         uan: getText("uanNumber"),
-        gst: document.getElementById("gst").value
+        gst: getText("gst"),
+
+        start_date: document.getElementById("startDate").value,
+        end_date: document.getElementById("endDate").value,
+        join_date: document.getElementById("JoinDate").value,
+
+        annual_ctc: getValue("AnnualCTC"),
+
+        days_payable: getValue("DaysPayable"),
+        days_worked: getValue("DaysWorked"),
+        lop_days: getValue("LopPayField"),
+
+        variable_pay: getValue("variableAmount"),
+        bonus: getValue("BonusAmount"),
+
+        pf_employee: getValue("pfEmployee"),
+        pf_employer: getValue("pfEmployer"),
+
+        tds: getValue("tdsAmount"),
+
+        total_earnings: getValue("totalEarnings"),
+        total_deductions: getValue("totalDeduction"),
+
+        net_salary: Number(
+            document.getElementById("netpay").innerText.replace(/,/g, "")
+        ) || 0
 
     };
 
     // ==========================
-    // Payslip Details
+    // Payslip
     // ==========================
 
     let start = new Date(document.getElementById("startDate").value);
@@ -489,17 +513,20 @@ async function saveEmployeeToDatabase() {
 
         net_salary: Number(
             document.getElementById("netpay").innerText.replace(/,/g, "")
-        )
+        ) || 0
 
     };
 
     try {
 
-        // ------------------------
-        // Save Employee
-        // ------------------------
+        console.log("Saving Employee...");
+        console.log(employee);
 
-        let employeeResponse = await fetch(
+        // ==========================
+        // Save Employee
+        // ==========================
+
+        const employeeResponse = await fetch(
             "https://payslip-uxinterfacely.onrender.com/employee",
             {
                 method: "POST",
@@ -510,17 +537,19 @@ async function saveEmployeeToDatabase() {
             }
         );
 
-        let employeeResult = await employeeResponse.json();
+        const employeeResult = await employeeResponse.json();
 
         console.log("Employee Saved");
-
         console.log(employeeResult);
 
-        // ------------------------
-        // Save Payslip
-        // ------------------------
+        console.log("Saving Payslip...");
+        console.log(payslip);
 
-        let payslipResponse = await fetch(
+        // ==========================
+        // Save Payslip
+        // ==========================
+
+        const payslipResponse = await fetch(
             "https://payslip-uxinterfacely.onrender.com/payslip",
             {
                 method: "POST",
@@ -531,63 +560,20 @@ async function saveEmployeeToDatabase() {
             }
         );
 
-        let payslipResult = await payslipResponse.json();
+        const payslipResult = await payslipResponse.json();
 
         console.log("Payslip Saved");
-
         console.log(payslipResult);
 
     }
     catch (err) {
 
-        console.error(err);
+        console.error("Database Save Error:", err);
 
     }
 
 }
-// async function saveEmployeeToDatabase() {
 
-//    const employee = {
-
-//     // Employee Master
-//     associate_id: getText("AssociateID"),
-//     employee_name: getText("name"),
-//     designation: getText("Designation"),
-//     department: getText("Department"),
-//     location: getText("location"),
-//     pan: getText("pan"),
-//     uan: getText("uanNumber"),
-//     gst: document.getElementById("gst").value,
-
-//     // Payslip Details
-//     start_date: document.getElementById("startDate").value,
-//     end_date: document.getElementById("endDate").value,
-//     join_date: document.getElementById("JoinDate").value,
-
-//     annual_ctc: Number(getText("AnnualCTC")) || 0,
-
-//     days_payable: Number(document.getElementById("DaysPayable").value) || 0,
-//     days_worked: Number(document.getElementById("DaysWorked").value) || 0,
-//     lop_days: Number(document.getElementById("LopPayField").value) || 0,
-
-//     variable_pay: Number(document.getElementById("variableAmount").value) || 0,
-//     bonus: Number(document.getElementById("BonusAmount").value) || 0,
-
-//     pf_employee: Number(document.getElementById("pfEmployee").value) || 0,
-//     pf_employer: Number(document.getElementById("pfEmployer").value) || 0,
-
-//     tds: Number(document.getElementById("tdsAmount").value) || 0,
-
-//     total_earnings: Number(document.getElementById("totalEarnings").value) || 0,
-//     total_deductions: Number(document.getElementById("totalDeduction").value) || 0,
-
-//     net_salary: parseFloat(
-//         document.getElementById("netpay").innerText.replace(/,/g, "")
-//     ) || 0
-
-// };
-
-// }
 
 /* SALARY CALCULATION */
 function calculateSalary() {
