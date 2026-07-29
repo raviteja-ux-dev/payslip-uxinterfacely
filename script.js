@@ -22,8 +22,12 @@ function hide(id) {
 
 /* ========================EXCEL UPLOAD VARIABLES ==================================*/
 
-let employees = [];
-let currentEmployeeIndex = 0; 
+    let employees = [];
+    let currentEmployeeIndex = 0; 
+    // Generated Payslips
+    let generatedPayslips = [];
+    let currentPayslipIndex = 0;
+    let generatedMode = false;
 
 /* ============  SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW) ======================*/
 
@@ -213,8 +217,92 @@ function calculateDays() {
     calculateSalary();
 }
 
-/* GENERATE PAYSLIP */
+// /* GENERATE PAYSLIP */
 async function generatePayslip() {
+
+    // If Excel is uploaded
+    if (employees.length > 0) {
+
+        generatedPayslips = [];
+
+        for (let i = 0; i < employees.length; i++) {
+
+            loadEmployee(i);
+
+            updatePayslipMonth();
+
+            setValue("empid", getText("AssociateID"));
+            setValue("empname", getText("name"));
+            setValue("designation", getText("Designation"));
+
+            document.getElementById("baseLocation").innerText =
+                getText("location");
+
+            setValue("displayPan", getText("pan"));
+            setValue("joindate", getText("JoinDate"));
+
+            if (document.getElementById("UAN").value === "yes") {
+
+                setValue("displayUan", getText("uanNumber"));
+
+            } else {
+
+                setValue("displayUan", "");
+
+            }
+
+            calculateDays();
+            calculateSalary();
+
+            // Save employee to DB
+            await saveEmployeeToDatabase();
+
+            // Save generated payslip
+            generatedPayslips.push({
+
+                empid: getText("AssociateID"),
+                empname: getText("name"),
+                designation: getText("Designation"),
+                location: getText("location"),
+                pan: getText("pan"),
+                joindate: document.getElementById("JoinDate").value,
+                uan: getText("uanNumber"),
+
+                paymonth: document.getElementById("paymonth").value,
+
+                salaryTable:
+                    document.getElementById("salaryTableBody").innerHTML,
+
+                totalEarnings:
+                    document.getElementById("totalEarnings").value,
+
+                totalDeduction:
+                    document.getElementById("totalDeduction").value,
+
+                netpay:
+                    document.getElementById("netpay").innerText,
+
+                amountWords:
+                    document.getElementById("amountWords").innerText
+
+            });
+
+        }
+
+        generatedMode = true;
+
+        currentPayslipIndex = 0;
+
+        showGeneratedPayslip(0);
+
+        document.getElementById("payslipLayout").style.display = "block";
+        document.getElementById("actionToolbar").style.display = "flex";
+
+        return;
+    }
+
+    // Manual Mode (without Excel)
+
     document.getElementById("payslipLayout").style.display = "block";
     document.getElementById("actionToolbar").style.display = "flex";
 
@@ -223,102 +311,283 @@ async function generatePayslip() {
     setValue("empid", getText("AssociateID"));
     setValue("empname", getText("name"));
     setValue("designation", getText("Designation"));
-    document.getElementById("baseLocation").innerText = getText("location");
+
+    document.getElementById("baseLocation").innerText =
+        getText("location");
+
     setValue("displayPan", getText("pan"));
     setValue("joindate", getText("JoinDate"));
 
     if (document.getElementById("UAN").value === "yes") {
+
         setValue("displayUan", getText("uanNumber"));
+
     } else {
+
         setValue("displayUan", "");
+
     }
 
     calculateDays();
-    calculateSalary();    
+    calculateSalary();
+
     await saveEmployeeToDatabase();
 
     window.scrollTo({
         top: document.getElementById("payslipLayout").offsetTop,
         behavior: "smooth"
     });
-    
+
 }
 
-/* ========== database saving ========*/
+// =========Generate all payslips at a time =============
+async function generateAllPayslips() {
+
+    if (employees.length === 0) {
+        alert("Please upload an Excel file.");
+        return;
+    }
+
+    generatedPayslips = [];
+
+    for (let i = 0; i < employees.length; i++) {
+
+        currentEmployeeIndex = i;
+
+        loadEmployee(i);
+
+        await generatePayslip();
+
+        generatedPayslips.push({
+
+            empid: document.getElementById("empid").value,
+            empname: document.getElementById("empname").value,
+            designation: document.getElementById("designation").value,
+            location: document.getElementById("baseLocation").innerText,
+            pan: document.getElementById("displayPan").value,
+            uan: document.getElementById("displayUan").value,
+            joinDate: document.getElementById("joindate").value,
+
+            salaryHTML:
+                document.getElementById("salaryTableBody").innerHTML,
+
+            totalEarnings:
+                document.getElementById("totalEarnings").value,
+
+            totalDeduction:
+                document.getElementById("totalDeduction").value,
+
+            netPay:
+                document.getElementById("netpay").innerText,
+
+            words:
+                document.getElementById("amountWords").innerText,
+
+            payMonth:
+                document.getElementById("paymonth").value
+
+        });
+
+    }
+
+    currentPayslipIndex = 0;
+
+    showGeneratedPayslip(0);
+
+    alert("All payslips generated successfully.");
+
+}
+
+// =================== show generated payslip =============
+
+function showGeneratedPayslip(index) {
+
+    if (generatedPayslips.length === 0) return;
+
+    let p = generatedPayslips[index];
+
+    document.getElementById("paymonth").value = p.payMonth;
+
+    document.getElementById("empid").value = p.empid;
+    document.getElementById("empname").value = p.empname;
+    document.getElementById("designation").value = p.designation;
+
+    document.getElementById("baseLocation").innerText = p.location;
+
+    document.getElementById("displayPan").value = p.pan;
+    document.getElementById("displayUan").value = p.uan;
+
+    document.getElementById("joindate").value = p.joinDate;
+
+    document.getElementById("salaryTableBody").innerHTML = p.salaryHTML;
+
+    document.getElementById("totalEarnings").value = p.totalEarnings;
+    document.getElementById("totalDeduction").value = p.totalDeduction;
+
+    document.getElementById("netpay").innerText = p.netPay;
+
+    document.getElementById("amountWords").innerText = p.words;
+
+}
+
+/* ========== save employee  to database ========*/
 async function saveEmployeeToDatabase() {
 
+    // ==========================
+    // Employee Master
+    // ==========================
+
     const employee = {
-        employee_name: getText("name"),
+
         associate_id: getText("AssociateID"),
+        employee_name: getText("name"),
         designation: getText("Designation"),
         department: getText("Department"),
         location: getText("location"),
 
-        start_date: document.getElementById("startDate").value,
-        end_date: document.getElementById("endDate").value,
-        join_date: document.getElementById("JoinDate").value,
-
-        days_payable: Number(document.getElementById("DaysPayable").value) || 0,
-        days_worked: Number(document.getElementById("DaysWorked").value) || 0,
-        lop_days: Number(document.getElementById("LopPayField").value) || 0,
-
-        annual_ctc: Number(getText("AnnualCTC")) || 0,
-
-        variable_pay: Number(document.getElementById("variableAmount").value) || 0,
-        bonus: Number(document.getElementById("BonusAmount").value) || 0,
-
-        pf_employee: Number(document.getElementById("pfEmployee").value) || 0,
-        pf_employer: Number(document.getElementById("pfEmployer").value) || 0,
-
         pan: getText("pan"),
         uan: getText("uanNumber"),
-        gst: document.getElementById("gst").value,
+        gst: document.getElementById("gst").value
 
-        tds: Number(document.getElementById("tdsAmount").value) || 0,
+    };
 
-        total_earnings: Number(document.getElementById("totalEarnings").value) || 0,
-        total_deductions: Number(document.getElementById("totalDeduction").value) || 0,
-        
-        net_salary: parseFloat(
+    // ==========================
+    // Payslip Details
+    // ==========================
+
+    let start = new Date(document.getElementById("startDate").value);
+
+    const payslip = {
+
+        associate_id: getText("AssociateID"),
+
+        start_date: document.getElementById("startDate").value,
+        end_date: document.getElementById("endDate").value,
+
+        pay_month: start.toLocaleString("default", {
+            month: "long"
+        }),
+
+        pay_year: start.getFullYear(),
+
+        annual_ctc: getValue("AnnualCTC"),
+
+        days_payable: getValue("DaysPayable"),
+        days_worked: getValue("DaysWorked"),
+        lop_days: getValue("LopPayField"),
+
+        variable_pay: getValue("variableAmount"),
+        bonus: getValue("BonusAmount"),
+
+        pf_employee: getValue("pfEmployee"),
+        pf_employer: getValue("pfEmployer"),
+
+        tds: getValue("tdsAmount"),
+
+        total_earnings: getValue("totalEarnings"),
+        total_deductions: getValue("totalDeduction"),
+
+        net_salary: Number(
             document.getElementById("netpay").innerText.replace(/,/g, "")
-        ) || 0
+        )
 
     };
 
     try {
-        console.log("Net Pay:", document.getElementById("netpay").innerText);
-        console.log(employee);
-        console.log("Employee object being sent:");
-        console.log(JSON.stringify(employee, null, 2));
 
-        const response = await fetch("https://payslip-uxinterfacely.onrender.com/employee", {
-        // const response = await fetch("http://localhost:3000/employee", {
+        // ------------------------
+        // Save Employee
+        // ------------------------
 
-            method: "POST",
+        let employeeResponse = await fetch(
+            "https://payslip-uxinterfacely.onrender.com/employee",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(employee)
+            }
+        );
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+        let employeeResult = await employeeResponse.json();
 
-            body: JSON.stringify(employee)
+        console.log("Employee Saved");
 
-        });
+        console.log(employeeResult);
 
-        const result = await response.json();
+        // ------------------------
+        // Save Payslip
+        // ------------------------
 
-        console.log(result);
+        let payslipResponse = await fetch(
+            "https://payslip-uxinterfacely.onrender.com/payslip",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payslip)
+            }
+        );
 
-        alert("Employee saved successfully!");
+        let payslipResult = await payslipResponse.json();
 
-    } catch (error) {
+        console.log("Payslip Saved");
 
-        console.error(error);
+        console.log(payslipResult);
 
-        alert("Unable to save employee.");
+    }
+    catch (err) {
+
+        console.error(err);
 
     }
 
 }
+// async function saveEmployeeToDatabase() {
+
+//    const employee = {
+
+//     // Employee Master
+//     associate_id: getText("AssociateID"),
+//     employee_name: getText("name"),
+//     designation: getText("Designation"),
+//     department: getText("Department"),
+//     location: getText("location"),
+//     pan: getText("pan"),
+//     uan: getText("uanNumber"),
+//     gst: document.getElementById("gst").value,
+
+//     // Payslip Details
+//     start_date: document.getElementById("startDate").value,
+//     end_date: document.getElementById("endDate").value,
+//     join_date: document.getElementById("JoinDate").value,
+
+//     annual_ctc: Number(getText("AnnualCTC")) || 0,
+
+//     days_payable: Number(document.getElementById("DaysPayable").value) || 0,
+//     days_worked: Number(document.getElementById("DaysWorked").value) || 0,
+//     lop_days: Number(document.getElementById("LopPayField").value) || 0,
+
+//     variable_pay: Number(document.getElementById("variableAmount").value) || 0,
+//     bonus: Number(document.getElementById("BonusAmount").value) || 0,
+
+//     pf_employee: Number(document.getElementById("pfEmployee").value) || 0,
+//     pf_employer: Number(document.getElementById("pfEmployer").value) || 0,
+
+//     tds: Number(document.getElementById("tdsAmount").value) || 0,
+
+//     total_earnings: Number(document.getElementById("totalEarnings").value) || 0,
+//     total_deductions: Number(document.getElementById("totalDeduction").value) || 0,
+
+//     net_salary: parseFloat(
+//         document.getElementById("netpay").innerText.replace(/,/g, "")
+//     ) || 0
+
+// };
+
+// }
 
 /* SALARY CALCULATION */
 function calculateSalary() {
@@ -743,41 +1012,155 @@ function loadEmployee(index) {
     updateNavigation();
 }
 
-// ========= Update Navigation ==========
-    function updateNavigation() {
+// ================= SHOW GENERATED PAYSLIP =================
+
+function showGeneratedPayslip(index) {
+
+    if (generatedPayslips.length === 0) return;
+
+    const p = generatedPayslips[index];
+
+    document.getElementById("payslipLayout").style.display = "block";
+    document.getElementById("actionToolbar").style.display = "flex";
+
+    // Header
+    document.getElementById("paymonth").value = p.paymonth;
+
+    // Employee Details
+    document.getElementById("empid").value = p.empid;
+    document.getElementById("empname").value = p.empname;
+    document.getElementById("designation").value = p.designation;
+
+    document.getElementById("baseLocation").innerText = p.location;
+
+    document.getElementById("displayPan").value = p.pan;
+    document.getElementById("joindate").value = p.joindate;
+    document.getElementById("displayUan").value = p.uan;
+
+    // Salary Table
+    document.getElementById("salaryTableBody").innerHTML = p.salaryTable;
+
+    // Totals
+    document.getElementById("totalEarnings").value =
+        p.totalEarnings;
+
+    document.getElementById("totalDeduction").value =
+        p.totalDeduction;
+
+    document.getElementById("netpay").innerText =
+        p.netpay;
+
+    document.getElementById("amountWords").innerText =
+        p.amountWords;
+
+    // Navigation text
 
     document.getElementById("currentEmployee").innerText =
-        `Payslip ${currentEmployeeIndex + 1} of ${employees.length}`;
+    `Payslip ${index + 1} of ${generatedPayslips.length}`;
 
     document.getElementById("prevEmployee").disabled =
-        currentEmployeeIndex === 0;
+        index === 0;
 
     document.getElementById("nextEmployee").disabled =
-        currentEmployeeIndex === employees.length - 1;
+        index === generatedPayslips.length - 1;
 
 }
 
-// ============ previous button in excel ============
-    document.getElementById("prevEmployee").addEventListener("click", function () {
+// ========= Update Navigation ==========
+function updateNavigation() {
 
-    if (currentEmployeeIndex > 0) {
+    // After Generate Payslip
+    if (generatedMode) {
 
-        currentEmployeeIndex--;
+        document.getElementById("currentEmployee").innerText =
+            `Payslip ${currentPayslipIndex + 1} of ${generatedPayslips.length}`;
 
-        loadEmployee(currentEmployeeIndex);
+        document.getElementById("prevEmployee").disabled =
+            currentPayslipIndex === 0;
+
+        document.getElementById("nextEmployee").disabled =
+            currentPayslipIndex === generatedPayslips.length - 1;
+
+    }
+
+    // Before Generate Payslip (Excel Upload)
+    else {
+
+        document.getElementById("currentEmployee").innerText =
+            `Payslip ${currentEmployeeIndex + 1} of ${employees.length}`;
+
+        document.getElementById("prevEmployee").disabled =
+            currentEmployeeIndex === 0;
+
+        document.getElementById("nextEmployee").disabled =
+            currentEmployeeIndex === employees.length - 1;
+
+    }
+
+}
+
+// ============ Previous button ============
+document.getElementById("prevEmployee").addEventListener("click", function () {
+
+    // Viewing generated payslips
+    if (generatedMode) {
+
+        if (currentPayslipIndex > 0) {
+
+            currentPayslipIndex--;
+
+            showGeneratedPayslip(currentPayslipIndex);
+
+            updateNavigation();
+
+        }
+
+    }
+
+    // Viewing uploaded Excel
+    else {
+
+        if (currentEmployeeIndex > 0) {
+
+            currentEmployeeIndex--;
+
+            loadEmployee(currentEmployeeIndex);
+
+        }
 
     }
 
 });
 
-// ============= Next button excel ============
-    document.getElementById("nextEmployee").addEventListener("click", function () {
 
-    if (currentEmployeeIndex < employees.length - 1) {
+// ============ Next button ============
+document.getElementById("nextEmployee").addEventListener("click", function () {
 
-        currentEmployeeIndex++;
+    // Viewing generated payslips
+    if (generatedMode) {
 
-        loadEmployee(currentEmployeeIndex);
+        if (currentPayslipIndex < generatedPayslips.length - 1) {
+
+            currentPayslipIndex++;
+
+            showGeneratedPayslip(currentPayslipIndex);
+
+            updateNavigation();
+
+        }
+
+    }
+
+    // Viewing uploaded Excel
+    else {
+
+        if (currentEmployeeIndex < employees.length - 1) {
+
+            currentEmployeeIndex++;
+
+            loadEmployee(currentEmployeeIndex);
+
+        }
 
     }
 
