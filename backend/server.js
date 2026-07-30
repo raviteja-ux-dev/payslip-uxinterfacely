@@ -159,36 +159,55 @@ app.get("/payslips", async (req, res) => {
 
 app.get("/payslips/:associateId", async (req, res) => {
 
-    try {
+ try {
 
-        const associateId = req.params.associateId.trim().toUpperCase();
+    const associateId = req.params.associateId.trim().toUpperCase();
 
-        const { data, error } = await supabase
-            .from("payslips")
-            .select("*")
-            .eq("associate_id", associateId)
-            .order("pay_year", { ascending: false })
-            .order("created_at", { ascending: false });
+    // Get payslips
+    const { data: payslips, error: payslipError } = await supabase
+        .from("payslips")
+        .select("*")
+        .eq("associate_id", associateId)
+        .order("pay_year", { ascending: false })
+        .order("created_at", { ascending: false });
 
-        if (error) {
-            console.error(error);
-            return res.status(500).json(error);
-        }
-
-        res.json(data);
-
-    } catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-            success: false,
-            error: err.message
-        });
-
+    if (payslipError) {
+        console.error(payslipError);
+        return res.status(500).json(payslipError);
     }
 
-});
+    // Get employee details
+    const { data: employee, error: employeeError } = await supabase
+        .from("employees")
+        .select("employee_name, designation")
+        .eq("associate_id", associateId)
+        .single();
+
+    if (employeeError) {
+        console.error(employeeError);
+        return res.status(500).json(employeeError);
+    }
+
+    // Add employee details to every payslip
+    const result = payslips.map(p => ({
+        ...p,
+        employee_name: employee.employee_name,
+        designation: employee.designation
+    }));
+
+    res.json(result);
+
+}
+catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+        success: false,
+        error: err.message
+    });
+
+}
 
 // =======================================
 // View Employees

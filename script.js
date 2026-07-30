@@ -85,6 +85,231 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pf, professiona
     }
 }
 
+function renderViewedSalaryTable(p) {
+
+    // =========================
+    // Calculate salary values
+    // =========================
+
+    const annualCTC = Number(p.annual_ctc) || 0;
+
+    const payableDays = Number(p.days_payable) || 0;
+    const workedDays = Number(p.days_worked) || 0;
+
+    let monthlyCTC = annualCTC / 12;
+
+    if (p.start_date && payableDays > 0) {
+
+        const date = new Date(p.start_date);
+
+        const totalMonthDays =
+            new Date(
+                date.getFullYear(),
+                date.getMonth() + 1,
+                0
+            ).getDate();
+
+        const perDaySalary =
+            monthlyCTC / totalMonthDays;
+
+        monthlyCTC =
+            perDaySalary * workedDays;
+    }
+    else {
+
+        monthlyCTC = 0;
+
+    }
+
+    // =========================
+    // Earnings
+    // =========================
+
+    const variable =
+        Number(p.variable_pay) || 0;
+
+    const bonus =
+        Number(p.bonus) || 0;
+
+    const basic =
+        monthlyCTC * 0.50;
+
+    const hra =
+        monthlyCTC * 0.20;
+
+    let special =
+        monthlyCTC - basic - hra - variable;
+
+    if (special < 0) {
+        special = 0;
+    }
+
+    // =========================
+    // PF
+    // =========================
+
+    const pfEmployee =
+        Number(p.pf_employee) || 0;
+
+    const pfEmployer =
+        Number(p.pf_employer) || 0;
+
+    const pf =
+        pfEmployee + pfEmployer;
+
+    // =========================
+    // TDS
+    // =========================
+
+    const tds =
+        Number(p.tds) || 0;
+
+    // =========================
+    // Professional Tax
+    // =========================
+
+    const professionalTax = 200;
+
+    // =========================
+    // Earnings List
+    // =========================
+
+    let earningsList = [
+
+        {
+            label: "Basic Salary",
+            val: basic.toFixed(2)
+        },
+
+        {
+            label: "HRA",
+            val: hra.toFixed(2)
+        },
+
+        {
+            label: "Special Allowance",
+            val: special.toFixed(2)
+        }
+
+    ];
+
+    // Variable Pay
+    if (variable > 0) {
+
+        earningsList.push({
+
+            label: "Variable Pay",
+            val: variable.toFixed(2)
+
+        });
+
+    }
+
+    // Bonus
+    if (bonus > 0) {
+
+        earningsList.push({
+
+            label: "Bonus",
+            val: bonus.toFixed(2)
+
+        });
+
+    }
+
+    // ============= Deductions List ============
+
+
+    let deductionsList = [];
+
+    // PF
+    if (pf > 0) {
+
+        deductionsList.push({
+
+            label: "Provident Fund",
+            val: pf.toFixed(2)
+
+        });
+
+    }
+
+    // Professional Tax
+    deductionsList.push({
+
+        label: "Professional Tax",
+        val: professionalTax.toFixed(2)
+
+    });
+
+    // TDS
+    if (tds > 0) {
+
+        deductionsList.push({
+
+            label: "TDS",
+            val: tds.toFixed(2)
+
+        });
+
+    }
+
+    // =========================
+    // Render Table
+    // =========================
+
+    const tbody =
+        document.getElementById("salaryTableBody");
+
+    tbody.innerHTML = "";
+
+    const maxRows =
+        Math.max(
+            earningsList.length,
+            deductionsList.length
+        );
+
+    for (let i = 0; i < maxRows; i++) {
+
+        const earn =
+            earningsList[i] || {
+                label: "",
+                val: ""
+            };
+
+        const ded =
+            deductionsList[i] || {
+                label: "",
+                val: ""
+            };
+
+        const tr =
+            document.createElement("tr");
+
+        tr.innerHTML = `
+
+            <td>${earn.label}</td>
+
+            <td>
+                <input
+                    value="${earn.val}"
+                    readonly
+                >
+            </td>
+
+            <td>${ded.label}</td>
+
+            <td>
+                <input
+                    value="${ded.val}"
+                    readonly
+                >
+            </td>
+
+        `;
+
+        tbody.appendChild(tr);
+    }}
 // payslip-month
 function updatePayslipMonth() {
     let startDate = document.getElementById("startDate").value;
@@ -340,7 +565,7 @@ async function generatePayslip() {
 
 }
 
-// =========Generate all payslips at a time =============
+// ========= Generate all payslips at a time =============
 async function generateAllPayslips() {
 
     if (employees.length === 0) {
@@ -398,44 +623,11 @@ async function generateAllPayslips() {
 
 }
 
-// =================== show generated payslip =============
-
-function showGeneratedPayslip(index) {
-
-    if (generatedPayslips.length === 0) return;
-
-    let p = generatedPayslips[index];
-
-    document.getElementById("paymonth").value = p.payMonth;
-
-    document.getElementById("empid").value = p.empid;
-    document.getElementById("empname").value = p.empname;
-    document.getElementById("designation").value = p.designation;
-
-    document.getElementById("baseLocation").innerText = p.location;
-
-    document.getElementById("displayPan").value = p.pan;
-    document.getElementById("displayUan").value = p.uan;
-
-    document.getElementById("joindate").value = p.joinDate;
-
-    document.getElementById("salaryTableBody").innerHTML = p.salaryHTML;
-
-    document.getElementById("totalEarnings").value = p.totalEarnings;
-    document.getElementById("totalDeduction").value = p.totalDeduction;
-
-    document.getElementById("netpay").innerText = p.netPay;
-
-    document.getElementById("amountWords").innerText = p.words;
-
-}
-
 /* ========== save employee  to database ========*/
 async function saveEmployeeToDatabase() {
 
     // ============= Employee Master =============
    
-
     const employee = {
 
         associate_id: getText("AssociateID").trim().toUpperCase(),
@@ -475,9 +667,7 @@ async function saveEmployeeToDatabase() {
 
     };
 
-    // ==========================
-    // Payslip
-    // ==========================
+    // =============  Payslip =============
 
     let start = new Date(document.getElementById("startDate").value);
 
@@ -599,6 +789,7 @@ async function searchPayslipHistory() {
         );
 
         const payslips = await response.json();
+        console.log("HISTORY API RESPONSE:", payslips);
 
         let html = "";
 
@@ -616,13 +807,12 @@ async function searchPayslipHistory() {
 
                 <div class="history-card">
 
-                    <div class="history-info">
-
+                   <div class="history-info">
+                        Employee Name : ${p.employee_name}<br>
+                        Designation : ${p.designation}<br>
                         <strong>${p.pay_month} ${p.pay_year}</strong><br>
-
                         Net Salary :
-                        ₹${Number(p.net_salary).toLocaleString()}
-
+                        ₹${Number(p.net_salary).toLocaleString("en-IN")}
                     </div>
 
                     <div class="history-buttons">
@@ -650,7 +840,9 @@ async function searchPayslipHistory() {
     }
 
 }
-//  ============= Function view payslip =============
+
+// ============= VIEW PAYSLIP FROM HISTORY =============
+
 async function viewPayslip(id) {
 
     try {
@@ -659,16 +851,201 @@ async function viewPayslip(id) {
             `https://payslip-uxinterfacely.onrender.com/payslip/${id}`
         );
 
-        const payslip = await response.json();
+        const p = await response.json();
 
-        console.log("Selected Payslip:");
+        console.log("Selected Payslip:", p);
 
-        console.log(payslip);
+        // ===================== SHOW PAYSLIP =====================
+
+        document.getElementById("payslipLayout").style.display = "block";
+        document.getElementById("actionToolbar").style.display = "flex";
+
+
+        // =================== HEADER =======================
+   
+        document.getElementById("paymonth").value =
+            `PAYSLIP FOR THE MONTH OF ${p.pay_month.toUpperCase()} ${p.pay_year}`;
+
+
+        // ================== EMPLOYEE DETAILS ========================
+
+        document.getElementById("empid").value =
+            p.associate_id || "";
+
+        document.getElementById("empname").value =
+            p.employee_name || "";
+
+        document.getElementById("designation").value =
+            p.designation || "";
+
+        document.getElementById("baseLocation").innerText =
+            p.location || "";
+
+        document.getElementById("displayPan").value =
+            p.pan || "";
+
+        document.getElementById("displayUan").value =
+            p.uan || "";
+
+        document.getElementById("joindate").value =
+            p.join_date || "";
+
+
+        // ===================  GST =======================
+
+        if (document.getElementById("displayGST")) {
+
+            document.getElementById("displayGST").value =
+                p.gst || "";
+
+        }
+
+
+        // ====================  CALCULATE SALARY VALUES ======================
+
+        let annualCTC = Number(p.annual_ctc) || 0;
+
+        let startDate = p.start_date;
+
+        let daysWorked = Number(p.days_worked) || 0;
+
+        let monthlyCTC = annualCTC / 12;
+
+        if (startDate && daysWorked > 0) {
+
+            let date = new Date(startDate);
+
+            let totalMonthDays =
+                new Date(
+                    date.getFullYear(),
+                    date.getMonth() + 1,
+                    0
+                ).getDate();
+
+            let perDaySalary =
+                monthlyCTC / totalMonthDays;
+
+            monthlyCTC =
+                perDaySalary * daysWorked;
+
+        } else {
+
+            monthlyCTC = 0;
+
+        }
+
+
+        // ======================  EARNINGS ====================
+
+        let basic =
+            monthlyCTC * 0.50;
+
+        let hra =
+            monthlyCTC * 0.20;
+
+        let variable =
+            Number(p.variable_pay) || 0;
+
+        let bonus =
+            Number(p.bonus) || 0;
+
+        let special =
+            monthlyCTC - basic - hra - variable;
+
+        if (special < 0) {
+
+            special = 0;
+
+        }
+
+
+        // =====================  DEDUCTIONS =====================
+
+        let pfEmployee =
+            Number(p.pf_employee) || 0;
+
+        let pfEmployer =
+            Number(p.pf_employer) || 0;
+
+        let pf =
+            pfEmployee + pfEmployer;
+
+        let professionalTax = 200;
+
+        let TDS =
+            Number(p.tds) || 0;
+
+
+        // Restore optional salary selections
+        document.getElementById("variablePay").value =
+            variable > 0 ? "yes" : "no";
+
+        document.getElementById("Bonus").value =
+            bonus > 0 ? "yes" : "no";
+
+        document.getElementById("PFfield").value =
+            pf > 0 ? "yes" : "no";
+
+        document.getElementById("tds").value =
+            TDS > 0 ? "yes" : "no";
+
+        // ===================== RENDER SALARY TABLE =====================
+
+        renderSalaryTable(
+            basic,
+            hra,
+            special,
+            variable,
+            bonus,
+            pf,
+            professionalTax,
+            TDS
+        );
+
+
+        // ====================  TOTALS ======================
+
+        document.getElementById("totalEarnings").value =
+            Number(p.total_earnings).toFixed(2);
+
+        document.getElementById("totalDeduction").value =
+            Number(p.total_deductions).toFixed(2);
+
+
+        // ==================== NET PAY ======================
+
+        document.getElementById("netpay").innerText =
+            Number(p.net_salary).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+
+        // ==================== AMOUNT IN WORDS ======================
+
+        document.getElementById("amountWords").innerText =
+            numberToWords(
+                Math.round(Number(p.net_salary))
+            );
+
+
+        // ====================== SCROLL TO PAYSLIP ====================
+
+        window.scrollTo({
+
+            top:
+                document.getElementById("payslipLayout").offsetTop,
+            behavior: "smooth"
+
+        });
 
     }
+
     catch (err) {
 
-        console.error(err);
+        console.error("View Payslip Error:", err);
+
+        alert("Unable to load payslip.");
 
     }
 
@@ -1047,8 +1424,6 @@ function loadEmployee(index) {
 
     }
 
-
-
     // ================  UAN ===============
 
     let uan = emp["UAN"] || "";
@@ -1067,8 +1442,6 @@ function loadEmployee(index) {
 
     }
 
-
-
     // ================== LOP =============
 
     let lop = Number(emp["LOP Days"]) || 0;
@@ -1086,8 +1459,6 @@ function loadEmployee(index) {
         toggleLop();
 
     }
-
-
 
     // =============== RECALCULATE ================
 
