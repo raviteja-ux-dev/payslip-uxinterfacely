@@ -14,7 +14,6 @@ const supabase = createClient(
 );
 
 
-
 // =======================================
 // Test Route
 // =======================================
@@ -22,7 +21,6 @@ const supabase = createClient(
 app.get("/", (req, res) => {
     res.send("Payslip API Running...");
 });
-
 
 
 // =======================================
@@ -40,9 +38,7 @@ app.get("/test", async (req, res) => {
     }
 
     res.json(data);
-
 });
-
 
 
 // =======================================
@@ -90,7 +86,6 @@ app.post("/employee", async (req, res) => {
 });
 
 
-
 // =======================================
 // Payslip
 // One Payslip per Month per Employee
@@ -135,7 +130,6 @@ app.post("/payslip", async (req, res) => {
 });
 
 
-
 // =======================================
 // View Payslips
 // =======================================
@@ -152,62 +146,68 @@ app.get("/payslips", async (req, res) => {
     }
 
     res.json(data);
-
 });
+
 
 // ================== Employee Payslip History =====================
 
 app.get("/payslips/:associateId", async (req, res) => {
 
- try {
+    try {
 
-    const associateId = req.params.associateId.trim().toUpperCase();
+        const associateId =
+            req.params.associateId.trim().toUpperCase();
 
-    // Get payslips
-    const { data: payslips, error: payslipError } = await supabase
-        .from("payslips")
-        .select("*")
-        .eq("associate_id", associateId)
-        .order("pay_year", { ascending: false })
-        .order("created_at", { ascending: false });
+        // Get payslips
+        const { data: payslips, error: payslipError } =
+            await supabase
+                .from("payslips")
+                .select("*")
+                .eq("associate_id", associateId)
+                .order("pay_year", { ascending: false })
+                .order("created_at", { ascending: false });
 
-    if (payslipError) {
-        console.error(payslipError);
-        return res.status(500).json(payslipError);
+        if (payslipError) {
+            console.error(payslipError);
+            return res.status(500).json(payslipError);
+        }
+
+        // Get employee details
+        const { data: employee, error: employeeError } =
+            await supabase
+                .from("employees")
+                .select("employee_name, designation")
+                .eq("associate_id", associateId)
+                .single();
+
+        if (employeeError) {
+            console.error(employeeError);
+            return res.status(500).json(employeeError);
+        }
+
+        // Add employee details to every payslip
+        const result = payslips.map(p => ({
+            ...p,
+            employee_name: employee.employee_name,
+            designation: employee.designation
+        }));
+
+        res.json(result);
+
+    }
+    catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
     }
 
-    // Get employee details
-    const { data: employee, error: employeeError } = await supabase
-        .from("employees")
-        .select("employee_name, designation")
-        .eq("associate_id", associateId)
-        .single();
+});
 
-    if (employeeError) {
-        console.error(employeeError);
-        return res.status(500).json(employeeError);
-    }
-
-    // Add employee details to every payslip
-    const result = payslips.map(p => ({
-        ...p,
-        employee_name: employee.employee_name,
-        designation: employee.designation
-    }));
-
-    res.json(result);
-
-}
-catch (err) {
-
-    console.error(err);
-
-    res.status(500).json({
-        success: false,
-        error: err.message
-    });
-
-}
 
 // =======================================
 // View Employees
@@ -225,8 +225,8 @@ app.get("/employees", async (req, res) => {
     }
 
     res.json(data);
-
 });
+
 
 // ================== Get Single Payslip + Employee Details =====================
 
@@ -238,11 +238,12 @@ app.get("/payslip/:id", async (req, res) => {
         // Get Payslip
         // -------------------------
 
-        const { data: payslip, error: payslipError } = await supabase
-            .from("payslips")
-            .select("*")
-            .eq("id", req.params.id)
-            .single();
+        const { data: payslip, error: payslipError } =
+            await supabase
+                .from("payslips")
+                .select("*")
+                .eq("id", req.params.id)
+                .single();
 
         if (payslipError) {
             return res.status(500).json(payslipError);
@@ -252,11 +253,12 @@ app.get("/payslip/:id", async (req, res) => {
         // Get Employee
         // -------------------------
 
-        const { data: employee, error: employeeError } = await supabase
-            .from("employees")
-            .select("*")
-            .eq("associate_id", payslip.associate_id)
-            .single();
+        const { data: employee, error: employeeError } =
+            await supabase
+                .from("employees")
+                .select("*")
+                .eq("associate_id", payslip.associate_id)
+                .single();
 
         if (employeeError) {
             return res.status(500).json(employeeError);
@@ -267,11 +269,8 @@ app.get("/payslip/:id", async (req, res) => {
         // -------------------------
 
         const result = {
-
             ...employee,
-
             ...payslip
-
         };
 
         res.json(result);
@@ -297,8 +296,6 @@ app.get("/payslip/:id", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
-
 });
