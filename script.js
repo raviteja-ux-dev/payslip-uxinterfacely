@@ -31,7 +31,7 @@ function hide(id) {
 
 /* ============  SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW) ======================*/
 
-function renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, TDS, ) {
+function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS) {
     // 1. Build list of active Earnings
     let earningsList = [
         { label: "Basic Salary", val: basic.toFixed(2) },
@@ -47,11 +47,12 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pf, professiona
         earningsList.push({ label: "Bonus", val: bonus.toFixed(2) });
     }
 
-    // 2. Build list of active Deductions
+    // 2. Build list of active Deductions (Separate PF rows for Employee & Employer)
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
-        deductionsList.push({ label: "Provident Fund", val: pf.toFixed(2) });
+        deductionsList.push({ label: "PF - Employee Fund", val: pfEmployee.toFixed(2) });
+        deductionsList.push({ label: "PF - Employer Fund", val: pfEmployer.toFixed(2) });
     }
 
     deductionsList.push({ label: "Professional Tax", val: professionalTax.toFixed(2) });
@@ -76,15 +77,14 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pf, professiona
 
         tr.innerHTML = `
             <td>${earn.label}</td>
-            <td><input value="${earn.val}" readonly></td>
+            <td style="text-align: right;">${earn.label ? `<input value="${earn.val}" readonly>` : ''}</td>
             <td>${ded.label}</td>
-            <td><input value="${ded.val}" readonly></td>
+            <td style="text-align: right;">${ded.label ? `<input value="${ded.val}" readonly>` : ''}</td>
         `;
 
         tbody.appendChild(tr);
     }
 }
-
 function renderViewedSalaryTable(p) {
 
     // =========================
@@ -992,13 +992,15 @@ async function viewPayslip(id) {
 
         // ===================== RENDER SALARY TABLE =====================
 
+
         renderSalaryTable(
             basic,
             hra,
             special,
             variable,
             bonus,
-            pf,
+            pfEmployee,
+            pfEmployer,
             professionalTax,
             TDS
         );
@@ -1053,6 +1055,7 @@ async function viewPayslip(id) {
 }
 
 /* SALARY CALCULATION */
+/* SALARY CALCULATION */
 function calculateSalary() {
     let annualCTC = getValue("AnnualCTC");
     let monthlyCTC = annualCTC / 12;
@@ -1090,11 +1093,14 @@ function calculateSalary() {
     let totalEarnings = basic + hra + special + variable + bonus;
     setValue("totalEarnings", totalEarnings.toFixed(2));
 
-    let pf = 0;
+    let pfEmployee = 0;
+    let pfEmployer = 0;
     if (document.getElementById("PFfield").value === "yes") {
-        pf = getValue("pfEmployee") + getValue("pfEmployer");
+        pfEmployee = getValue("pfEmployee");
+        pfEmployer = getValue("pfEmployer");
     }
 
+    let pf = pfEmployee + pfEmployer;
     let professionalTax = 200;
 
     let TDS = 0;
@@ -1102,11 +1108,11 @@ function calculateSalary() {
         TDS = getValue("tdsAmount");
     }
 
-    let totalDeduction = pf + professionalTax + TDS ;
+    let totalDeduction = pf + professionalTax + TDS;
     setValue("totalDeduction", totalDeduction.toFixed(2));
 
-    // Render paired single table
-    renderSalaryTable(basic, hra, special, variable, bonus, pf, professionalTax, TDS,);
+    // Render table with separate PF rows
+    renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS);
 
     let netSalary = totalEarnings - totalDeduction;
     if (netSalary < 0) netSalary = 0;
