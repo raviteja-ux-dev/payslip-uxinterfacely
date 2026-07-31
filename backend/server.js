@@ -1,9 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
+const { Resend } = require("resend");
 
 const app = express();
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024
+    }
+});
 
 app.use(cors());
 app.use(express.json());
@@ -12,6 +20,7 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_KEY
 );
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 
 // =======================================
@@ -289,10 +298,162 @@ app.get("/payslip/:id", async (req, res) => {
 
 });
 
+// ================== Send Payslip Email =====================
 
-// =======================================
-// Start Server
-// =======================================
+app.post(
+    "/send-payslip",
+    upload.single("pdf"),
+    async (req, res) => {
+
+        try {
+
+            const employeeEmail =
+                req.body.employeeEmail;
+
+            const employeeName =
+                req.body.employeeName || "Employee";
+
+            const pdfFile =
+                req.file;
+
+            // ==========================
+            // Validate email
+            // ==========================
+
+            if (!employeeEmail) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Employee email is required"
+                });
+
+            }
+
+            // ==========================
+            // Validate PDF
+            // ==========================
+
+            if (!pdfFile) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Payslip PDF is required"
+                });
+
+            }
+
+            console.log(
+                "Sending payslip to:",
+                employeeEmail
+            );
+
+            console.log(
+                "PDF size:",
+                pdfFile.size,
+                "bytes"
+            );
+
+            // ==========================
+            // Send Email using Resend
+            // ==========================
+
+            const emailResult =
+                await resend.emails.send({
+
+                    from:
+                        "Payslip <onboarding@resend.dev>",
+
+                    to: [employeeEmail],
+
+                    subject:
+                        `Payslip - ${employeeName}`,
+
+                    html: `
+                        <p>Dear ${employeeName},</p>
+
+                        <p>
+                            Please find your payslip
+                            attached with this email.
+                        </p>
+
+                        <p>
+                            Regards,<br>
+                            Payroll Team
+                        </p>
+                    `,
+
+                    attachments: [
+                        {
+                            filename:
+                                `${employeeName}_Payslip.pdf`,
+
+                            content:
+                                pdfFile.buffer
+                        }
+                    ]
+
+                });
+
+            console.log(
+                "Resend result:",
+                emailResult
+            );
+
+            if (emailResult.error) {
+
+                console.error(
+                    "Resend error:",
+                    emailResult.error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        emailResult.error.message ||
+                        "Failed to send email"
+                });
+
+            }
+
+            // ==========================
+            // Success
+            // ==========================
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Payslip email sent successfully",
+
+                data: emailResult.data
+
+            });
+
+        }
+        catch (err) {
+
+            console.error(
+                "Send Payslip Error:",
+                err
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    err.message ||
+                    "Failed to send payslip email"
+
+            });
+
+        }
+
+    }
+);
+
+// ================ Start Server =======================
 
 const PORT = process.env.PORT || 3000;
 

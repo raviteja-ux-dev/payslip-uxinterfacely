@@ -85,6 +85,9 @@ body {
 .btn-print { background-color: #c69d07; }
 .btn-print:hover { transform:translateY(-2px);box-shadow: 0 5px 10px rgb(199, 123, 9)}
 
+.btn-email { background-color: #6f42c1;}
+.btn-email:hover { background-color: #59339d; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(111, 66, 193, 0.25);}
+    
 .btn-excel { background-color: #28a745; }
 .btn-excel:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(40, 167, 69, 0.25); }
 

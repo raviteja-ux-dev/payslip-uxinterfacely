@@ -633,6 +633,7 @@ async function saveEmployeeToDatabase() {
         associate_id: getText("AssociateID").trim().toUpperCase(),
         employee_name: getText("name"),
         designation: getText("Designation"),
+        email: getText("email"),
         department: getText("Department"),
         location: getText("location"),
 
@@ -1293,6 +1294,157 @@ async function downloadPDF() {
     pdf.save(`${employee}_${month}_Payslip.pdf`);
 }
 
+// ================== SEND PAYSLIP TO EMPLOYEE EMAIL =====================
+
+async function sendPayslipEmail() {
+
+    try {
+
+        const employeeEmail =
+            document.getElementById("email").value.trim();
+
+        const employeeName =
+            document.getElementById("empname").value.trim() || "Employee";
+
+        if (!employeeEmail) {
+
+            alert("Please enter employee email address.");
+
+            return;
+        }
+
+        const toolbar =
+            document.getElementById("actionToolbar");
+
+        toolbar.style.display = "none";
+
+        const payslip =
+            document.getElementById("payslipLayout");
+
+        const canvas = await html2canvas(payslip, {
+            scale: 1.5,
+            useCORS: true,
+            backgroundColor: "#ffffff"
+        });
+
+        toolbar.style.display = "flex";
+
+        const { jsPDF } = window.jspdf;
+
+        const pdf = new jsPDF({
+            orientation: "landscape",
+            unit: "mm",
+            format: "letter"
+        });
+
+        const imgData =
+            canvas.toDataURL("image/jpeg", 0.8);
+
+        const pageWidth =
+            pdf.internal.pageSize.getWidth();
+
+        const pageHeight =
+            pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pageWidth;
+
+        const imgHeight =
+            canvas.height * imgWidth / canvas.width;
+
+        let y = 0;
+
+        if (imgHeight < pageHeight) {
+            y = (pageHeight - imgHeight) / 2;
+        }
+
+        pdf.addImage(
+            imgData,
+            "JPEG",
+            0,
+            y,
+            imgWidth,
+            imgHeight
+        );
+
+        // Convert PDF to Blob
+        const pdfBlob = pdf.output("blob");
+
+        // Create FormData
+        const formData = new FormData();
+
+        formData.append(
+            "employeeEmail",
+            employeeEmail
+        );
+
+        formData.append(
+            "employeeName",
+            employeeName
+        );
+
+        formData.append(
+            "pdf",
+            pdfBlob,
+            `${employeeName}_Payslip.pdf`
+        );
+
+        console.log(
+            "PDF size:",
+            (pdfBlob.size / 1024 / 1024).toFixed(2),
+            "MB"
+        );
+
+        const response = await fetch(
+            "https://payslip-uxinterfacely.onrender.com/send-payslip",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+
+            console.error(
+                "Email API Error:",
+                result
+            );
+
+            alert(
+                result.message ||
+                "Unable to send payslip email."
+            );
+
+            return;
+        }
+
+        alert(
+            `Payslip sent successfully to ${employeeEmail}`
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Send Email Error:",
+            error
+        );
+
+        alert(
+            "Failed to send payslip email."
+        );
+
+        const toolbar =
+            document.getElementById("actionToolbar");
+
+        if (toolbar) {
+            toolbar.style.display = "flex";
+        }
+
+    }
+
+}
 
 // loading excel date formats 
 function formatExcelDate(value) {
@@ -1335,6 +1487,7 @@ function loadEmployee(index) {
     setValue("name", emp["Employee Name"] || "");
     setValue("AssociateID", emp["Associate ID"] || "");
     setValue("Designation", emp["Designation"] || "");
+    setValue("email", emp["Email"] || "");
     setValue("Department", emp["Department"] || "");
     setValue("location", emp["Location"] || "");
 
@@ -1691,6 +1844,7 @@ function downloadExcelTemplate() {
             "Employee Name": "",
             "Associate ID": "",
             "Designation": "",
+            "Email": "",
             "Department": "",
             "Location": "",
 
