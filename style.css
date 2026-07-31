@@ -85,6 +85,9 @@ body {
 .btn-print { background-color: #c69d07; }
 .btn-print:hover { transform:translateY(-2px);box-shadow: 0 5px 10px rgb(199, 123, 9)}
 
+.btn-email { background-color: #6f42c1;}
+.btn-email:hover { background-color: #59339d; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(111, 66, 193, 0.25);}
+    
 .btn-excel { background-color: #28a745; }
 .btn-excel:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(40, 167, 69, 0.25); }
 
@@ -304,10 +307,66 @@ body {
 
 }
 
+/* ===================================================
+   Employee Payslip History
+=================================================== */
+
+.history-container{
+    width:95%;
+    margin:30px auto;
+    background:#fff;
+    border-radius:8px;
+    padding:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.history-container h3{
+    margin-bottom:20px;
+}
+
+.history-search{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.history-search input{
+    flex:1;
+    height:42px;
+    padding:10px;
+    font-size:16px;
+}
+
+.history-search button{
+    width:120px;
+}
+
+.history-card{
+    border:1px solid #ddd;
+    border-radius:6px;
+    padding:15px;
+    margin-bottom:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.history-info{
+    line-height:26px;
+}
+
+.history-buttons{
+    display:flex;
+    gap:10px;
+}
+
+.history-buttons button{
+    padding:8px 15px;
+    cursor:pointer;
+}
+
 #downloadTemplate:hover{
-
     background:#1d4ed8;
-
 }
 
 @media print {

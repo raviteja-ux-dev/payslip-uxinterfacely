@@ -34,7 +34,13 @@
           <div class="form-control">
             <label for="Designation">Designation</label>
             <input class="form-inputs" type="text" id="Designation" value="" name="Designation">
-         </div>         
+         </div>   
+         
+          <!-- Email field --> 
+          <div class="form-control">
+            <label for="email">Employee Email</label>
+            <input type="email" id="email" name="Email" class="form-inputs" placeholder="employee@example.com">
+          </div>
 
           <!--Annual Ctc field-->      
           <div class="form-control">
@@ -53,12 +59,12 @@
             <label for="JoinDate">Join Date</label>
             <input class="form-inputs" type="date" id="JoinDate" value="" name="JoinDate">
           </div> 
-
           <!-- location field -->
           <div class="form-control">
             <label for="location">Location</label>
             <input class="form-inputs" type="text" id="location" value="" name="location">
-          </div>         
+          </div>     
+         
           <!-- department field -->
           <div class="form-control">
             <label for="Department">Department</label>
@@ -201,6 +207,18 @@
         </div>   
       </div>
     </form>
+    <!-- ================= Employee Payslip History ================= -->
+
+      <div class="history-container">
+          <h3>Employee Payslip History</h3>
+          <div class="history-search">
+            <input type="text" id="historyAssociateId" placeholder="Enter Associate ID">        
+            <button type="button" onclick="searchPayslipHistory()">Search</button>
+          </div>
+          <div id="historyResult">
+
+          </div>
+      </div>
 
     <!-- PAYSLIP SECTION -->
       <div id="payslipLayout" class="payslip-layout" style="display:none;">
@@ -292,6 +310,7 @@
       <div class="action-toolbar print-hide" id="actionToolbar" style="display:none;">
         <button type="button" class="btn-pdf" onclick="downloadPDF()"> Download PDF </button>
         <button type="button" class="btn-print" onclick="printPayslip()"> Print Payslip </button>
+        <button type="button" class="btn-email" onclick="sendPayslipEmail()">Send Payslip</button>
         <button type="button" class="btn-excel" onclick="addCurrentRowToExcel()"> Add Current Row </button>
         <button type="button" class="btn-clear" onclick="clearExcelRows()"> Clear Stored Rows </button>
       </div>
