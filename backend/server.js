@@ -23,18 +23,14 @@ const supabase = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 
-// =======================================
-// Test Route
-// =======================================
+// ================== Test Route =====================
 
 app.get("/", (req, res) => {
     res.send("Payslip API Running...");
 });
 
 
-// =======================================
-// Test Employees
-// =======================================
+// ================== Test Employees =====================
 
 app.get("/test", async (req, res) => {
 
@@ -50,11 +46,8 @@ app.get("/test", async (req, res) => {
 });
 
 
-// =======================================
-// Employee Master
-// Insert if new
-// Update if Associate ID already exists
-// =======================================
+// ================= Employee Master ======================
+// Insert if new Update if Associate ID already exists
 
 app.post("/employee", async (req, res) => {
 
@@ -95,10 +88,7 @@ app.post("/employee", async (req, res) => {
 });
 
 
-// =======================================
-// Payslip
-// One Payslip per Month per Employee
-// =======================================
+// ================ One Payslip per Month per Employee =======================
 
 app.post("/payslip", async (req, res) => {
 
@@ -218,9 +208,7 @@ app.get("/payslips/:associateId", async (req, res) => {
 });
 
 
-// =======================================
-// View Employees
-// =======================================
+// ================== View Employees =====================
 
 app.get("/employees", async (req, res) => {
 
@@ -243,9 +231,7 @@ app.get("/payslip/:id", async (req, res) => {
 
     try {
 
-        // -------------------------
-        // Get Payslip
-        // -------------------------
+        // ------------ Get Payslip -------------
 
         const { data: payslip, error: payslipError } =
             await supabase
@@ -258,9 +244,7 @@ app.get("/payslip/:id", async (req, res) => {
             return res.status(500).json(payslipError);
         }
 
-        // -------------------------
-        // Get Employee
-        // -------------------------
+        // ------------- Get Employee ------------
 
         const { data: employee, error: employeeError } =
             await supabase
@@ -273,9 +257,7 @@ app.get("/payslip/:id", async (req, res) => {
             return res.status(500).json(employeeError);
         }
 
-        // -------------------------
-        // Merge both objects
-        // -------------------------
+        // ------------- Merge both objects ------------
 
         const result = {
             ...employee,
@@ -316,9 +298,7 @@ app.post(
             const pdfFile =
                 req.file;
 
-            // ==========================
-            // Validate email
-            // ==========================
+            // ============ Validate email ==============
 
             if (!employeeEmail) {
 
@@ -329,9 +309,7 @@ app.post(
 
             }
 
-            // ==========================
-            // Validate PDF
-            // ==========================
+            // =========== Validate PDF ===============
 
             if (!pdfFile) {
 
@@ -353,15 +331,13 @@ app.post(
                 "bytes"
             );
 
-            // ==========================
-            // Send Email using Resend
-            // ==========================
+            // ============ Send Email using Resend ==============
 
             const emailResult =
                 await resend.emails.send({
 
                     from:
-                        "Payslip <onboarding@resend.dev>",
+                        process.env.RESEND_FROM_EMAIL,
 
                     to: [employeeEmail],
 
