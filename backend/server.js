@@ -345,17 +345,46 @@ app.post(
                         `Payslip - ${employeeName}`,
 
                     html: `
-                        <p>Dear ${employeeName},</p>
+                        <div style="font-family: Arial, sans-serif; color: #333333; max-width: 600px; margin: 0 auto;">
 
-                        <p>
-                            Please find your payslip
-                            attached with this email.
-                        </p>
+                            <p>Dear ${employeeName},</p>
 
-                        <p>
-                            Regards,<br>
-                            Payroll Team
-                        </p>
+                            <p>
+                                Welcome to another pay cycle! We're pleased to share
+                                your payslip for this month. Please find it attached
+                                as a PDF to this email.
+                            </p>
+
+                            <p>
+                                If you notice any discrepancy in the amounts or
+                                details, please reach out to the Payroll team at
+                                the earliest so we can look into it.
+                            </p>
+
+                            <p>
+                                Thank you for your continued hard work and
+                                dedication.
+                            </p>
+
+                            <p>
+                                Regards,<br>
+                                Payroll Team
+                            </p>
+
+                            <hr style="border: none; border-top: 1px solid #dddddd; margin: 24px 0;">
+
+                            <div style="text-align: center;">
+                                <img
+                                    src="${process.env.COMPANY_LOGO_URL}"
+                                    alt="Company Logo"
+                                    style="max-width: 150px; height: auto;"
+                                >
+                                <p style="font-size: 12px; color: #999999; margin-top: 8px;">
+                                    This is a computer-generated email. Please do not reply directly.
+                                </p>
+                            </div>
+
+                        </div>
                     `,
 
                     attachments: [
