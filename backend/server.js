@@ -280,6 +280,184 @@ app.get("/payslip/:id", async (req, res) => {
 
 });
 
+// // ================== Send Payslip Email =====================
+
+// app.post(
+//     "/send-payslip",
+//     upload.single("pdf"),
+//     async (req, res) => {
+
+//         try {
+
+//             const employeeEmail =
+//                 req.body.employeeEmail;
+
+//             const employeeName =
+//                 req.body.employeeName || "Employee";
+
+//             const pdfFile =
+//                 req.file;
+
+//             // ============ Validate email ==============
+
+//             if (!employeeEmail) {
+
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: "Employee email is required"
+//                 });
+
+//             }
+
+//             // =========== Validate PDF ===============
+
+//             if (!pdfFile) {
+
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: "Payslip PDF is required"
+//                 });
+
+//             }
+
+//             console.log(
+//                 "Sending payslip to:",
+//                 employeeEmail
+//             );
+
+//             console.log(
+//                 "PDF size:",
+//                 pdfFile.size,
+//                 "bytes"
+//             );
+
+//             // ============ Send Email using Resend ==============
+
+//             const emailResult =
+//                 await resend.emails.send({
+
+//                     from:
+//                         process.env.RESEND_FROM_EMAIL,
+
+//                     to: [employeeEmail],
+
+//                     subject:
+//                         `Payslip - ${employeeName}`,
+
+//                     html: `
+//                         <div style="font-family: Arial, sans-serif; color: #333333; max-width: 600px; margin: 0 auto;">
+
+//                             <p>Dear ${employeeName},</p>
+
+//                             <p>
+//                                 Welcome to another pay cycle! We're pleased to share
+//                                 your payslip for this month. Please find it attached
+//                                 as a PDF to this email.
+//                             </p>
+
+//                             <p>
+//                                 If you notice any discrepancy in the amounts or
+//                                 details, please reach out to the Payroll team at
+//                                 the earliest so we can look into it.
+//                             </p>
+
+//                             <p>
+//                                 Thank you for your continued hard work and
+//                                 dedication.
+//                             </p>
+
+//                             <p>
+//                                 Regards,<br>
+//                                 Payroll Team
+//                             </p>
+
+//                             <hr style="border: none; margin: 24px 0;">
+
+//                             <div style="text-align: center;">
+//                                 <img
+//                                     src="${process.env.COMPANY_LOGO_URL}"
+//                                     alt="Company Logo"
+//                                     style="max-width: 150px; height: auto;"
+//                                 >
+//                                 <p style="font-size: 12px; color: #999999; margin-top: 8px;">
+//                                     This is a computer-generated email. Please do not reply directly.
+//                                 </p>
+//                             </div>
+
+//                         </div>
+//                     `,
+
+//                     attachments: [
+//                         {
+//                             filename:
+//                                 `${employeeName}_Payslip.pdf`,
+
+//                             content:
+//                                 pdfFile.buffer
+//                         }
+//                     ]
+
+//                 });
+
+//             console.log(
+//                 "Resend result:",
+//                 emailResult
+//             );
+
+//             if (emailResult.error) {
+
+//                 console.error(
+//                     "Resend error:",
+//                     emailResult.error
+//                 );
+
+//                 return res.status(500).json({
+//                     success: false,
+//                     message:
+//                         emailResult.error.message ||
+//                         "Failed to send email"
+//                 });
+
+//             }
+
+//             // ==========================
+//             // Success
+//             // ==========================
+
+//             res.json({
+
+//                 success: true,
+
+//                 message:
+//                     "Payslip email sent successfully",
+
+//                 data: emailResult.data
+
+//             });
+
+//         }
+//         catch (err) {
+
+//             console.error(
+//                 "Send Payslip Error:",
+//                 err
+//             );
+
+//             res.status(500).json({
+
+//                 success: false,
+
+//                 message:
+//                     err.message ||
+//                     "Failed to send payslip email"
+
+//             });
+
+//         }
+
+//     }
+// );
+
 // ================== Send Payslip Email =====================
 
 app.post(
@@ -298,6 +476,7 @@ app.post(
             const pdfFile =
                 req.file;
 
+
             // ============ Validate email ==============
 
             if (!employeeEmail) {
@@ -308,6 +487,7 @@ app.post(
                 });
 
             }
+
 
             // =========== Validate PDF ===============
 
@@ -320,6 +500,7 @@ app.post(
 
             }
 
+
             console.log(
                 "Sending payslip to:",
                 employeeEmail
@@ -330,6 +511,7 @@ app.post(
                 pdfFile.size,
                 "bytes"
             );
+
 
             // ============ Send Email using Resend ==============
 
@@ -345,49 +527,129 @@ app.post(
                         `Payslip - ${employeeName}`,
 
                     html: `
-                        <div style="font-family: Arial, sans-serif; color: #333333; max-width: 600px; margin: 0 auto;">
+                        <div style="
+                            font-family: Arial, sans-serif;
+                            color: #333333;
+                            width: 100%;
+                            max-width: 600px;
+                            margin: 0;
+                            padding: 0;
+                            text-align: left;
+                        ">
 
-                            <p>Dear ${employeeName},</p>
+                            <!-- Greeting -->
 
-                            <p>
+                            <p style="
+                                margin: 0 0 20px 0;
+                                padding: 0;
+                                text-align: left;
+                            ">
+                                Dear ${employeeName},
+                            </p>
+
+
+                            <!-- Introduction -->
+
+                            <p style="
+                                margin: 0 0 20px 0;
+                                padding: 0;
+                                text-align: left;
+                                line-height: 1.5;
+                            ">
                                 Welcome to another pay cycle! We're pleased to share
                                 your payslip for this month. Please find it attached
                                 as a PDF to this email.
                             </p>
 
-                            <p>
+
+                            <!-- Discrepancy Information -->
+
+                            <p style="
+                                margin: 0 0 20px 0;
+                                padding: 0;
+                                text-align: left;
+                                line-height: 1.5;
+                            ">
                                 If you notice any discrepancy in the amounts or
                                 details, please reach out to the Payroll team at
                                 the earliest so we can look into it.
                             </p>
 
-                            <p>
+
+                            <!-- Thank You -->
+
+                            <p style="
+                                margin: 0 0 20px 0;
+                                padding: 0;
+                                text-align: left;
+                                line-height: 1.5;
+                            ">
                                 Thank you for your continued hard work and
                                 dedication.
                             </p>
 
-                            <p>
+
+                            <!-- Regards -->
+
+                            <p style="
+                                margin: 0;
+                                padding: 0;
+                                text-align: left;
+                                line-height: 1.5;
+                            ">
                                 Regards,<br>
                                 Payroll Team
                             </p>
 
-                            <hr style="border: none; border-top: 1px solid #dddddd; margin: 24px 0;">
 
-                            <div style="text-align: center;">
+                            <!-- Company Logo -->
+
+                            <div style="
+                                margin-top: 20px;
+                                padding: 0;
+                                text-align: left;
+                            ">
+
                                 <img
                                     src="${process.env.COMPANY_LOGO_URL}"
                                     alt="Company Logo"
-                                    style="max-width: 150px; height: auto;"
+                                    width="150"
+                                    style="
+                                        display: block;
+                                        width: 150px;
+                                        max-width: 150px;
+                                        height: auto;
+                                        border: 0;
+                                        outline: none;
+                                        text-decoration: none;
+                                    "
                                 >
-                                <p style="font-size: 12px; color: #999999; margin-top: 8px;">
-                                    This is a computer-generated email. Please do not reply directly.
-                                </p>
+
                             </div>
+
+
+                            <!-- Footer Disclaimer -->
+
+                            <p style="
+                                margin: 20px 0 0 0;
+                                padding: 0;
+                                font-size: 12px;
+                                color: #999999;
+                                text-align: left;
+                                line-height: 1.4;
+                            ">
+                                This is a computer-generated email.
+                                Please do not reply directly.
+                            </p>
 
                         </div>
                     `,
 
+
+                    // ============ PDF Attachment ============
+
                     attachments: [
+
                         {
                             filename:
                                 `${employeeName}_Payslip.pdf`,
@@ -395,14 +657,19 @@ app.post(
                             content:
                                 pdfFile.buffer
                         }
+
                     ]
 
                 });
+
 
             console.log(
                 "Resend result:",
                 emailResult
             );
+
+
+            // ============ Resend Error ============
 
             if (emailResult.error) {
 
@@ -412,13 +679,17 @@ app.post(
                 );
 
                 return res.status(500).json({
+
                     success: false,
+
                     message:
                         emailResult.error.message ||
                         "Failed to send email"
+
                 });
 
             }
+
 
             // ==========================
             // Success
@@ -431,11 +702,18 @@ app.post(
                 message:
                     "Payslip email sent successfully",
 
-                data: emailResult.data
+                data:
+                    emailResult.data
 
             });
 
         }
+
+
+        // ==========================
+        // Catch Error
+        // ==========================
+
         catch (err) {
 
             console.error(
