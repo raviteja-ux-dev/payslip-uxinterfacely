@@ -1311,6 +1311,9 @@ async function sendPayslipEmail() {
 
         const employeeName =
             document.getElementById("empname").value.trim() || "Employee";
+        
+        const associateId =
+            document.getElementById("empid").value.trim();
 
         if (!employeeEmail) {
 
@@ -1386,6 +1389,11 @@ async function sendPayslipEmail() {
         formData.append(
             "employeeName",
             employeeName
+        );
+
+        formData.append(
+            "associateId",                              
+            associateId
         );
 
         formData.append(

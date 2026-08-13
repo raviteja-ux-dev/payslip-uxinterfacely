@@ -4,6 +4,10 @@ const multer = require("multer");
 require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
+const muhammara = require("muhammara");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
 
 const app = express();
 const upload = multer({
@@ -21,6 +25,46 @@ const supabase = createClient(
     process.env.SUPABASE_KEY
 );
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+
+// ============ Generate password from name + associate ID ==============
+
+function generatePayslipPassword(employeeName, associateId) {
+
+    const namePart = employeeName
+        .replace(/\s+/g, "")
+        .substring(0, 4)
+        .toUpperCase();
+
+    return `${namePart}${associateId}`;
+
+}
+
+
+// ============ Password-protect a PDF buffer ==============
+
+function protectPdfBuffer(buffer, password) {
+
+    const tmpDir = os.tmpdir();
+    const inputPath = path.join(tmpDir, `payslip-in-${Date.now()}.pdf`);
+    const outputPath = path.join(tmpDir, `payslip-out-${Date.now()}.pdf`);
+
+    fs.writeFileSync(inputPath, buffer);
+
+    muhammara.recrypt(inputPath, outputPath, {
+        userPassword: password,
+        ownerPassword: password,
+        userProtectionFlag: 4
+    });
+
+    const protectedBuffer = fs.readFileSync(outputPath);
+
+    fs.unlinkSync(inputPath);
+    fs.unlinkSync(outputPath);
+
+    return protectedBuffer;
+
+}
 
 
 // ================== Test Route =====================
@@ -295,6 +339,9 @@ app.post(
             const employeeName =
                 req.body.employeeName || "Employee";
 
+            const associateId =
+                req.body.associateId;
+
             const pdfFile =
                 req.file;
 
@@ -323,6 +370,18 @@ app.post(
             }
 
 
+            // =========== Validate associate ID ===============
+
+            if (!associateId) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Associate ID is required"
+                });
+
+            }
+
+
             console.log(
                 "Sending payslip to:",
                 employeeEmail
@@ -333,6 +392,15 @@ app.post(
                 pdfFile.size,
                 "bytes"
             );
+
+
+            // ============ Password-protect the PDF ==============
+
+            const payslipPassword =
+                generatePayslipPassword(employeeName, associateId);
+
+            const protectedPdfBuffer =
+                protectPdfBuffer(pdfFile.buffer, payslipPassword);
 
 
             // ============ Send Email using Resend ==============
@@ -381,6 +449,20 @@ app.post(
                                 Welcome to another pay cycle! We're pleased to share
                                 your payslip for this month. Please find it attached
                                 as a PDF to this email.
+                            </p>
+
+
+                            <!-- Password Information -->
+
+                            <p style="
+                                margin: 0 0 20px 0;
+                                padding: 0;
+                                text-align: left;
+                                line-height: 1.5;
+                            ">
+                                This PDF is password protected. To open it, use the
+                                first 4 letters of your name (in capital letters)
+                                followed by your Associate ID.
                             </p>
 
 
@@ -478,7 +560,7 @@ app.post(
                                 `${employeeName}_Payslip.pdf`,
 
                             content:
-                                pdfFile.buffer
+                                protectedPdfBuffer
                         }
 
                     ]
