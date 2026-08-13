@@ -129,7 +129,9 @@ app.post("/payslip", async (req, res) => {
 });
 
 
-// ================= View Payslips ======================
+// =======================================
+// View Payslips
+// =======================================
 
 app.get("/payslips", async (req, res) => {
 
@@ -327,53 +329,13 @@ app.post(
             );
 
             console.log(
-                "Original PDF size:",
+                "PDF size:",
                 pdfFile.size,
                 "bytes"
             );
 
 
-            // ====================== PASSWORD GENERATION ==========================
-
-            /*
-                Example password:
-
-                EMPLOYEE_NAME@2026
-
-                You can change this later to:
-                Employee ID + DOB
-                Employee ID + PAN
-                Employee ID + joining date
-                etc.
-            */
-
-            const pdfPassword =
-                `${employeeName}@2026`;
-
-            console.log(
-                "Protecting PDF with password..."
-            );
-
-
-            // =================================================
-            // PASSWORD PROTECT PDF
-            // =================================================
-
-            const protectedPdf =
-                await protectPdfWithPassword(
-                    pdfFile.buffer,
-                    pdfPassword
-                );
-
-
-            console.log(
-                "Protected PDF size:",
-                protectedPdf.length,
-                "bytes"
-            );
-
-
-            // ======================= SEND EMAIL USING RESEND ==========================
+            // ============ Send Email using Resend ==============
 
             const emailResult =
                 await resend.emails.send({
@@ -386,10 +348,7 @@ app.post(
                     subject:
                         `Payslip - ${employeeName}`,
 
-                    // ================= EMAIL BODY =================
-
                     html: `
-
                         <div style="
                             font-family: Arial, sans-serif;
                             color: #333333;
@@ -419,13 +378,13 @@ app.post(
                                 text-align: left;
                                 line-height: 1.5;
                             ">
-                                Welcome to another pay cycle! We're pleased
-                                to share your payslip for this month.
-                                Please find it attached as a PDF to this email.
+                                Welcome to another pay cycle! We're pleased to share
+                                your payslip for this month. Please find it attached
+                                as a PDF to this email.
                             </p>
 
 
-                            <!-- Discrepancy -->
+                            <!-- Discrepancy Information -->
 
                             <p style="
                                 margin: 0 0 20px 0;
@@ -433,9 +392,9 @@ app.post(
                                 text-align: left;
                                 line-height: 1.5;
                             ">
-                                If you notice any discrepancy in the amounts
-                                or details, please reach out to the Payroll
-                                team at the earliest so we can look into it.
+                                If you notice any discrepancy in the amounts or
+                                details, please reach out to the Payroll team at
+                                the earliest so we can look into it.
                             </p>
 
 
@@ -452,82 +411,50 @@ app.post(
                             </p>
 
 
-                            <!-- Regards + Logo -->
-
-                            <table
-                                cellpadding="0"
-                                cellspacing="0"
-                                border="0"
-                                width="100%"
-                                style="
-                                    border-collapse: collapse;
-                                    margin: 0;
-                                    padding: 0;
-                                "
-                            >
-
-                                <tr>
-
-                                    <td
-                                        align="left"
-                                        valign="top"
-                                        style="
-                                            padding: 0;
-                                            margin: 0;
-                                            text-align: left;
-                                        "
-                                    >
-
-                                        <div style="
-                                            margin: 0;
-                                            padding: 0;
-                                            text-align: left;
-                                            line-height: 1.5;
-                                        ">
-                                            Regards,<br>
-                                            Payroll Team
-                                        </div>
-
-
-                                        <!-- Company Logo -->
-
-                                        <div style="
-                                            margin: 12px 0 0 0;
-                                            padding: 0;
-                                            text-align: left;
-                                            line-height: 0;
-                                        ">
-
-                                            <img
-                                                src="${process.env.COMPANY_LOGO_URL}"
-                                                alt="Company Logo"
-                                                width="150"
-                                                style="
-                                                    display: block;
-                                                    width: 150px;
-                                                    max-width: 150px;
-                                                    height: auto;
-                                                    margin: 0;
-                                                    padding: 0;
-                                                    border: 0;
-                                                    outline: none;
-                                                    text-decoration: none;
-                                                "
-                                            >
-
-                                        </div>
-
-                                    </td>
-
-                                </tr>
-
-                            </table>
-
-
-                            <!-- Footer -->
+                            <!-- Regards -->
 
                             <p style="
-                                margin: 16px 0 0 0;
+                                margin: 0;
+                                padding: 0;
+                                text-align: left;
+                                line-height: 1.5;
+                            ">
+                                Regards,<br>
+                                Payroll Team
+                            </p>
+
+
+                            <!-- Company Logo -->
+
+                            <div style="
+                                margin-top: 20px;
+                                padding: 0;
+                                text-align: left;
+                                margin-left: 0;
+                            ">
+
+                                <img
+                                    src="${process.env.COMPANY_LOGO_URL}"
+                                    alt="Company Logo"
+                                    width="150"
+                                    style="
+                                        display: block;
+                                        width: 100px;
+                                        max-width: 150px;
+                                        height: auto;
+                                        border: 0;
+                                        outline: none;
+                                        text-decoration: none;
+                                    "
+                                >
+
+                            </div>
+
+
+                            <!-- Footer Disclaimer -->
+
+                            <p style="
+                                margin: 20px 0 0 0;
                                 padding: 0;
                                 font-size: 12px;
                                 color: #999999;
@@ -539,12 +466,10 @@ app.post(
                             </p>
 
                         </div>
-
                     `,
 
 
-                    // ========================= ATTACH PROTECTED PDF ========================
-
+                    // ============ PDF Attachment ============
 
                     attachments: [
 
@@ -553,7 +478,7 @@ app.post(
                                 `${employeeName}_Payslip.pdf`,
 
                             content:
-                                protectedPdf
+                                pdfFile.buffer
                         }
 
                     ]
@@ -567,7 +492,7 @@ app.post(
             );
 
 
-            // ========================= RESEND ERROR ========================
+            // ============ Resend Error ============
 
             if (emailResult.error) {
 
@@ -589,14 +514,16 @@ app.post(
             }
 
 
-            // ======================== SUCCESS =========================
+            // ==========================
+            // Success
+            // ==========================
 
             res.json({
 
                 success: true,
 
                 message:
-                    "Password-protected payslip email sent successfully",
+                    "Payslip email sent successfully",
 
                 data:
                     emailResult.data
@@ -606,7 +533,9 @@ app.post(
         }
 
 
-        // =========================== CATCH ERROR ==========================
+        // ==========================
+        // Catch Error
+        // ==========================
 
         catch (err) {
 
