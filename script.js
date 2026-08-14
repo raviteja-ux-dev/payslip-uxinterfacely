@@ -29,7 +29,7 @@ function hide(id) {
     let currentPayslipIndex = 0;
     let generatedMode = false;
 
-/* ============  SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW) ======================*/
+/* ========== SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW) =======*/
 
 function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS) {
     // 1. Build list of active Earnings
@@ -573,51 +573,11 @@ async function generateAllPayslips() {
         return;
     }
 
-    generatedPayslips = [];
-
-    for (let i = 0; i < employees.length; i++) {
-
-        currentEmployeeIndex = i;
-
-        loadEmployee(i);
-
-        await generatePayslip();
-
-        generatedPayslips.push({
-
-            empid: document.getElementById("empid").value,
-            empname: document.getElementById("empname").value,
-            designation: document.getElementById("designation").value,
-            location: document.getElementById("baseLocation").innerText,
-            pan: document.getElementById("displayPan").value,
-            uan: document.getElementById("displayUan").value,
-            joinDate: document.getElementById("joindate").value,
-
-            salaryHTML:
-                document.getElementById("salaryTableBody").innerHTML,
-
-            totalEarnings:
-                document.getElementById("totalEarnings").value,
-
-            totalDeduction:
-                document.getElementById("totalDeduction").value,
-
-            netPay:
-                document.getElementById("netpay").innerText,
-
-            words:
-                document.getElementById("amountWords").innerText,
-
-            payMonth:
-                document.getElementById("paymonth").value
-
-        });
-
-    }
-
-    currentPayslipIndex = 0;
-
-    showGeneratedPayslip(0);
+    // generatePayslip() already loops over every employee in `employees`
+    // and builds `generatedPayslips` internally when employees.length > 0.
+    // Looping over it again here duplicated every database save N times
+    // per employee (N^2 total writes) — so just call it once.
+    await generatePayslip();
 
     alert("All payslips generated successfully.");
 
@@ -1318,6 +1278,13 @@ async function sendPayslipEmail() {
         if (!employeeEmail) {
 
             alert("Please enter employee email address.");
+
+            return;
+        }
+
+        if (!associateId) {
+
+            alert("Associate ID is missing. Please generate the payslip first.");
 
             return;
         }
