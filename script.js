@@ -381,9 +381,11 @@ function toggleUan() {
     let enabled = document.getElementById("UAN").value === "yes";
     if (enabled) {
         show("uanNumberBox");
+        document.getElementById("uanNumber").required = true;
     } else {
         hide("uanNumberBox");
         setValue("uanNumber", "");
+        document.getElementById("uanNumber").required = false;
     }
 }
 
@@ -445,6 +447,12 @@ function calculateDays() {
 // /* GENERATE PAYSLIP */
 async function generatePayslip() {
 
+    // Trigger HTML5 inline form validation
+    const form = document.getElementById("payslipgenerator");
+    if (!form.reportValidity()) {
+        return; // Stops generation if fields are invalid
+    }
+
     // If Excel is uploaded
     if (employees.length > 0) {
 
@@ -475,6 +483,7 @@ async function generatePayslip() {
                 setValue("displayUan", "");
 
             }
+            setValue("displayAnnualCTC", getText("AnnualCTC"));
 
             calculateDays();
             calculateSalary();
@@ -492,6 +501,7 @@ async function generatePayslip() {
                 pan: getText("pan"),
                 joindate: document.getElementById("JoinDate").value,
                 uan: getText("uanNumber"),
+                annualCTC: getText("AnnualCTC"),
 
                 paymonth: document.getElementById("paymonth").value,
 
@@ -552,6 +562,7 @@ async function generatePayslip() {
         setValue("displayUan", "");
 
     }
+    setValue("displayAnnualCTC", getText("AnnualCTC"));
 
     calculateDays();
     calculateSalary();
@@ -599,7 +610,7 @@ async function saveEmployeeToDatabase() {
 
         pan: getText("pan"),
         uan: getText("uanNumber"),
-        gst: getText("gst"),
+        
 
         start_date: document.getElementById("startDate").value,
         end_date: document.getElementById("endDate").value,
@@ -852,15 +863,10 @@ async function viewPayslip(id) {
             p.join_date || "";
 
 
-        // ===================  GST =======================
 
-        if (document.getElementById("displayGST")) {
-
-            document.getElementById("displayGST").value =
-                p.gst || "";
-
+        if (document.getElementById("displayAnnualCTC")) {
+            document.getElementById("displayAnnualCTC").value = p.annual_ctc || "";
         }
-
 
         // ====================  CALCULATE SALARY VALUES ======================
 
@@ -1626,6 +1632,7 @@ function showGeneratedPayslip(index) {
     document.getElementById("displayPan").value = p.pan;
     document.getElementById("joindate").value = p.joindate;
     document.getElementById("displayUan").value = p.uan;
+    document.getElementById("displayAnnualCTC").value = p.annualCTC;
 
     // Salary Table
     document.getElementById("salaryTableBody").innerHTML = p.salaryTable;
