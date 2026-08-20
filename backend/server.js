@@ -410,8 +410,7 @@ app.post(
 
                     to: [employeeEmail],
 
-                    subject:
-                        `Payslip - ${employeeName}`,
+                    subject: `Payslip - ${employeeName} - ${payMonthYear}`,
 
                         html: `
                             <div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.5; font-size: 14px; text-align: left;">
