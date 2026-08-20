@@ -333,18 +333,15 @@ app.post(
 
         try {
 
-            const employeeEmail =
-                req.body.employeeEmail;
+            const employeeEmail = req.body.employeeEmail;
+                
+            const employeeName = req.body.employeeName || "Employee";
+                
+            const associateId = req.body.associateId;
+                
+            const payMonthYear = req.body.payMonthYear || "this month";
 
-            const employeeName =
-                req.body.employeeName || "Employee";
-
-            const associateId =
-                req.body.associateId;
-
-            const pdfFile =
-                req.file;
-
+            const pdfFile = req.file;
 
             // ============ Validate email ==============
 
@@ -416,137 +413,36 @@ app.post(
                     subject:
                         `Payslip - ${employeeName}`,
 
-                    html: `
-                        <div style="
-                            font-family: Arial, sans-serif;
-                            color: #333333;
-                            width: 100%;
-                            max-width: 600px;
-                            margin: 0;
-                            padding: 0;
-                            text-align: left;
-                        ">
-
-                            <!-- Greeting -->
-
-                            <p style="
-                                margin: 0 0 20px 0;
-                                padding: 0;
-                                text-align: left;
-                            ">
-                                Dear ${employeeName},
+                        html: `
+                            <div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.5; font-size: 14px; text-align: left;">
+                            <p style="margin-bottom: 15px;">Dear ${employeeName},</p>
+                            
+                            <p style="margin-bottom: 15px;">Greetings from UXINTERFACELY IT SOLUTIONS LLP</p>
+                            
+                            <p style="margin-bottom: 15px;">Please find attached your salary payslip for ${payMonthYear} for your reference and records.</p>
+                            
+                            <p style="margin-bottom: 15px;">
+                                <strong>Payslip Password Format</strong><br>
+                                The attached PDF is password protected. To open the payslip, please use:<br>
+                                First 4 letters of your name in CAPITAL letters + Associate ID
                             </p>
-
-
-                            <!-- Introduction -->
-
-                            <p style="
-                                margin: 0 0 20px 0;
-                                padding: 0;
-                                text-align: left;
-                                line-height: 1.5;
-                            ">
-                                Welcome to another pay cycle! We're pleased to share
-                                your payslip for this month. Please find it attached
-                                as a PDF to this email.
+                            
+                            <p style="margin-bottom: 15px;">
+                                Example:<br>
+                                Name: Apple<br>
+                                Associate ID: UX1234<br>
+                                Password: APPLUX1234
                             </p>
-
-
-                            <!-- Password Information -->
-
-                            <p style="
-                                margin: 0 0 20px 0;
-                                padding: 0;
-                                text-align: left;
-                                line-height: 1.5;
-                            ">
-                                This PDF is password protected. To open it, use the
-                                first 4 letters of your name (in capital letters)
-                                followed by your Associate ID.
+                            
+                            <p style="margin-bottom: 15px;">
+                                If you do not know your Associate ID, please contact your respective contact person to obtain the details.<br>
+                                If you face any issues accessing your payslip, please reach out to the Team for assistance.
                             </p>
-
-
-                            <!-- Discrepancy Information -->
-
-                            <p style="
-                                margin: 0 0 20px 0;
-                                padding: 0;
-                                text-align: left;
-                                line-height: 1.5;
-                            ">
-                                If you notice any discrepancy in the amounts or
-                                details, please reach out to the Payroll team at
-                                the earliest so we can look into it.
-                            </p>
-
-
-                            <!-- Thank You -->
-
-                            <p style="
-                                margin: 0 0 20px 0;
-                                padding: 0;
-                                text-align: left;
-                                line-height: 1.5;
-                            ">
-                                Thank you for your continued hard work and
-                                dedication.
-                            </p>
-
-
-                            <!-- Regards -->
-
-                            <p style="
-                                margin: 0;
-                                padding: 0;
-                                text-align: left;
-                                line-height: 1.5;
-                            ">
-                                Regards,<br>
-                                Payroll Team
-                            </p>
-
-
-                            <!-- Company Logo -->
-
-                            <div style="
-                                margin-top: 20px;
-                                padding: 0;
-                                text-align: left;
-                                margin-left: 0;
-                            ">
-
-                                <img
-                                    src="${process.env.COMPANY_LOGO_URL}"
-                                    alt="Company Logo"
-                                    width="150"
-                                    style="
-                                        display: block;
-                                        width: 100px;
-                                        max-width: 150px;
-                                        height: auto;
-                                        border: 0;
-                                        outline: none;
-                                        text-decoration: none;
-                                    "
-                                >
-
+                            
+                            <p style="margin-bottom: 0;">Best Regards,</p>
+                            <div style="margin-top: 20px;">
+                                <img src="${process.env.COMPANY_EMAIL_SIGNATURE_URL}" alt="Company Logo" style="display: block; width: 150px; height: auto;">
                             </div>
-
-
-                            <!-- Footer Disclaimer -->
-
-                            <p style="
-                                margin: 20px 0 0 0;
-                                padding: 0;
-                                font-size: 12px;
-                                color: #999999;
-                                text-align: left;
-                                line-height: 1.4;
-                            ">
-                                This is a computer-generated email.
-                                Please do not reply directly.
-                            </p>
-
                         </div>
                     `,
 

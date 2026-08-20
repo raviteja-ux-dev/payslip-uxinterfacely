@@ -1368,6 +1368,15 @@ async function sendPayslipEmail() {
             "associateId",                              
             associateId
         );
+        let startDateVal = document.getElementById("startDate").value;
+        if (startDateVal) {
+            let dateObj = new Date(startDateVal);
+            let monthName = dateObj.toLocaleString('default', { month: 'long' });
+            let year = dateObj.getFullYear();
+            formData.append("payMonthYear", `${monthName}, ${year}`);
+        } else {
+            formData.append("payMonthYear", "this month");
+        }
 
         formData.append(
             "pdf",
