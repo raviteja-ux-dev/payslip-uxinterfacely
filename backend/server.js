@@ -439,9 +439,24 @@ app.post(
                             </p>
                             
                             <p style="margin-bottom: 0;">Best Regards,</p>
-                            <div style="margin-top: 20px;">
-                                <img src="${process.env.COMPANY_EMAIL_SIGNATURE_URL}" alt="Company Logo" style="display: block; width: 150px; height: auto;">
-                            </div>
+                            <table style="border: 1px solid #cccccc; border-collapse: collapse; width: 100%; max-width: 600px;  margin-top: 25px; font-family: Arial, sans-serif; font-size: 14px; color: #000000;">
+                                <tr>
+                                    <td style="border-right: 1px solid #cccccc; padding: 20px; width: 40%; text-align: center; vertical-align: middle;">
+                                        <img src="${process.env.COMPANY_LOGO_URL}" alt="UXInterfacely Logo" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+                                    </td>
+                                    <td style="padding: 20px; width: 60%; vertical-align: middle; line-height: 1.8;">
+                                        <p style="margin: 0 0 10px 0; font-size: 15px;">Gopisetti Haripriya</p>
+                                        <p style="margin: 0 0 10px 0;">Human Resources at UXINTERFACELY IT SOLUTIONS</p>
+                                        <p style="margin: 0 0 10px 0;">
+                                            <a href="https://www.uxinterfacely.com" style="color: #0000ee; text-decoration: underline;">www.uxinterfacely.com</a>
+                                        </p>
+                                        <p style="margin: 0 0 10px 0;"><strong>UXINTERFACELY IT SOLUTIONS LLP</strong></p>
+                                        <p style="margin: 0;">
+                                            <a href="mailto:hr@uxinterfacely.com" style="color: #0000ee; text-decoration: underline;">hr@uxinterfacely.com</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     `,
 
