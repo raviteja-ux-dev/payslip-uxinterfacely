@@ -32,8 +32,8 @@ body {
 }
 
 .form-control label {
-    font-size: 14px;
-    font-weight: 400;
+    font-size: 16px;
+    font-weight: 500;
     min-height: 22px;
 }
 
@@ -43,7 +43,8 @@ body {
     padding: 10px 14px;
     border: 1px solid #999;
     border-radius: 5px;
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 500;
 }
 
 /* Single-Row Action Toolbar */
@@ -398,4 +399,17 @@ body {
 @media screen and (max-width: 600px) {
     .action-toolbar { flex-direction: column; }
     .action-toolbar button { width: 100%; flex: 1 1 100%; }
+}
+
+/* Hide up/down arrow spinners for Chrome, Safari, Edge, and Opera */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide up/down arrow spinners for Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }

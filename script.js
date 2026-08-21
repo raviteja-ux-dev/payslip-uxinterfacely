@@ -1176,12 +1176,8 @@ let accumulatedPayslips = JSON.parse(localStorage.getItem("accumulatedPayslips")
 
 function addCurrentRowToExcel() {
     let rawName = getText("name") || "Employee";
-    let sanitizedName = rawName.trim().replace(/\s+/g, "_");
 
     let startDateVal = document.getElementById("startDate").value;
-    let year = startDateVal ? new Date(startDateVal).getFullYear() : new Date().getFullYear();
-
-    let fileName = `${sanitizedName}_${year}.xlsx`;
 
     let currentRowData = {
         "S.No": accumulatedPayslips.length + 1,
@@ -1205,12 +1201,21 @@ function addCurrentRowToExcel() {
     accumulatedPayslips.push(currentRowData);
     localStorage.setItem("accumulatedPayslips", JSON.stringify(accumulatedPayslips));
 
+    alert(`Row #${accumulatedPayslips.length} added to export queue! (Click 'Download Excel' to save)`);
+}
+
+function downloadAccumulatedExcel() {
+    if (accumulatedPayslips.length === 0) {
+        alert("No rows have been added yet. Click 'Add Current Row' first.");
+        return;
+    }
+
     const worksheet = XLSX.utils.json_to_sheet(accumulatedPayslips);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Payslips");
 
-    XLSX.writeFile(workbook, fileName);
-    alert(`Row #${accumulatedPayslips.length} added to ${fileName}!`);
+    // Download under a fixed file name
+    XLSX.writeFile(workbook, "Accumulated_Payslips.xlsx");
 }
 
 function clearExcelRows() {
@@ -1799,9 +1804,8 @@ if (excelInput) {
 
             const worksheet = workbook.Sheets[firstSheet];
 
-            employees = XLSX.utils.sheet_to_json(worksheet, {
-                defval: ""
-            });
+            employees = XLSX.utils.sheet_to_json(worksheet, { defval: "" })
+                .filter(emp => emp["Associate ID"] && emp["Employee Name"]);
 
             console.log("Employees:", employees);
             console.log("Total Employees:", employees.length);
@@ -1898,3 +1902,18 @@ autoCalculateFields.forEach(id => {
         field.addEventListener("input", calculateSalary);
     }
 });
+
+function validateUan(input) {
+    // Strip non-numeric characters and limit to 12 digits
+    let val = input.value.replace(/[^0-9]/g, '').slice(0, 12);
+    input.value = val;
+    
+    // Check for length and sequential strings like "1234567"
+    if (val.length !== 12) {
+        input.setCustomValidity("UAN must be exactly 12 digits.");
+    } else if (val.includes("1234567") || /^(\d)\1{11}$/.test(val)) {
+        input.setCustomValidity("Invalid UAN sequence (e.g. sequential or repeating digits).");
+    } else {
+        input.setCustomValidity(""); // Valid UAN
+    }
+}
