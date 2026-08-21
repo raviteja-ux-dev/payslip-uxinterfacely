@@ -557,7 +557,7 @@ async function generatePayslip() {
         getText("location");
 
     setValue("displayPan", getText("pan"));
-    setValue("joindate", getText("JoinDate"));
+    setValue("joindate", formatDateDMY(getText("JoinDate")));
 
     if (document.getElementById("UAN").value === "yes") {
 
@@ -1656,7 +1656,7 @@ function showGeneratedPayslip(index) {
     document.getElementById("baseLocation").innerText = p.location;
 
     document.getElementById("displayPan").value = p.pan;
-    document.getElementById("joindate").value = p.joindate;
+    document.getElementById("joindate").value = formatDateDMY(p.joindate);
     document.getElementById("displayUan").value = p.uan;
     document.getElementById("displayAnnualCTC").value = p.annualCTC;
 
