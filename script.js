@@ -9,7 +9,13 @@ function getText(id) {
 }
 
 function setValue(id, value) {
-    document.getElementById(id).value = value;
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") {
+        el.value = value;
+    } else {
+        el.textContent = value;
+    }
 }
 
 function show(id) {
@@ -455,7 +461,7 @@ async function generatePayslip() {
 
     // If Excel is uploaded
     if (employees.length > 0) {
-
+        saveCurrentFormToEmployeeArray();
         generatedPayslips = [];
 
         for (let i = 0; i < employees.length; i++) {
@@ -844,8 +850,7 @@ async function viewPayslip(id) {
         document.getElementById("empid").value =
             p.associate_id || "";
 
-        document.getElementById("empname").value =
-            p.employee_name || "";
+         setValue("empname", p.employee_name || "");
 
         document.getElementById("designation").value =
             p.designation || "";
@@ -1622,6 +1627,7 @@ function loadEmployee(index) {
     updateNavigation();
 }
 
+
 // ================= SHOW GENERATED PAYSLIP =================
 
 function showGeneratedPayslip(index) {
@@ -1629,6 +1635,13 @@ function showGeneratedPayslip(index) {
     if (generatedPayslips.length === 0) return;
 
     const p = generatedPayslips[index];
+
+    // --> NEW: Keep the top form fields synchronized with the viewed payslip
+    if (employees.length > 0) {
+        currentEmployeeIndex = index; // Sync form index
+        loadEmployee(index);          // Load data into top form controls
+    }
+    // <-- END NEW
 
     document.getElementById("payslipLayout").style.display = "block";
     document.getElementById("actionToolbar").style.display = "flex";
@@ -1638,13 +1651,13 @@ function showGeneratedPayslip(index) {
 
     // Employee Details
     document.getElementById("empid").value = p.empid;
-    document.getElementById("empname").value = p.empname;
+    setValue("empname", p.empname); // Sync span name
     document.getElementById("designation").value = p.designation;
 
     document.getElementById("baseLocation").innerText = p.location;
 
     document.getElementById("displayPan").value = p.pan;
-    document.getElementById("joindate").value = formatDateDMY(p.joindate);
+    document.getElementById("joindate").value = p.joindate;
     document.getElementById("displayUan").value = p.uan;
     document.getElementById("displayAnnualCTC").value = p.annualCTC;
 
@@ -1665,7 +1678,6 @@ function showGeneratedPayslip(index) {
         p.amountWords;
 
     // Navigation text
-
     document.getElementById("currentEmployee").innerText =
     `Payslip ${index + 1} of ${generatedPayslips.length}`;
 
@@ -1712,69 +1724,36 @@ function updateNavigation() {
 
 // ============ Previous button ============
 document.getElementById("prevEmployee").addEventListener("click", function () {
-
-    // Viewing generated payslips
     if (generatedMode) {
-
         if (currentPayslipIndex > 0) {
-
             currentPayslipIndex--;
-
             showGeneratedPayslip(currentPayslipIndex);
-
             updateNavigation();
-
         }
-
-    }
-
-    // Viewing uploaded Excel
-    else {
-
+    } else {
         if (currentEmployeeIndex > 0) {
-
+            saveCurrentFormToEmployeeArray(); // <-- ADD THIS
             currentEmployeeIndex--;
-
             loadEmployee(currentEmployeeIndex);
-
         }
-
     }
-
 });
-
 
 // ============ Next button ============
 document.getElementById("nextEmployee").addEventListener("click", function () {
-
-    // Viewing generated payslips
     if (generatedMode) {
-
         if (currentPayslipIndex < generatedPayslips.length - 1) {
-
             currentPayslipIndex++;
-
             showGeneratedPayslip(currentPayslipIndex);
-
             updateNavigation();
-
         }
-
-    }
-
-    // Viewing uploaded Excel
-    else {
-
+    } else {
         if (currentEmployeeIndex < employees.length - 1) {
-
+            saveCurrentFormToEmployeeArray(); // <-- ADD THIS
             currentEmployeeIndex++;
-
             loadEmployee(currentEmployeeIndex);
-
         }
-
     }
-
 });
 
 
@@ -1949,4 +1928,32 @@ function formatDateDMY(dateString) {
     let month = String(date.getMonth() + 1).padStart(2, '0');
     let year = date.getFullYear();
     return `${day}-${month}-${year}`;
+}
+
+// Saves current form inputs back to the Excel memory array
+function saveCurrentFormToEmployeeArray() {
+    if (employees.length === 0) return;
+    
+    let emp = employees[currentEmployeeIndex];
+    
+    emp["Employee Name"] = getText("name");
+    emp["Associate ID"] = getText("AssociateID");
+    emp["Designation"] = getText("Designation");
+    emp["Email"] = getText("email");
+    emp["Department"] = getText("Department");
+    emp["Location"] = getText("location");
+    
+    emp["Annual CTC"] = getValue("AnnualCTC");
+    emp["Start Date"] = document.getElementById("startDate").value;
+    emp["End Date"] = document.getElementById("endDate").value;
+    emp["Join Date"] = document.getElementById("JoinDate").value;
+    
+    emp["PAN"] = getText("pan");
+    emp["UAN"] = document.getElementById("UAN").value === "yes" ? getText("uanNumber") : "";
+    emp["Variable Pay"] = document.getElementById("variablePay").value === "yes" ? getValue("variableAmount") : 0;
+    emp["Bonus"] = document.getElementById("Bonus").value === "yes" ? getValue("BonusAmount") : 0;
+    emp["PF Employee"] = document.getElementById("PFfield").value === "yes" ? getValue("pfEmployee") : 0;
+    emp["PF Employer"] = document.getElementById("PFfield").value === "yes" ? getValue("pfEmployer") : 0;
+    emp["TDS"] = document.getElementById("tds").value === "yes" ? getValue("tdsAmount") : 0;
+    emp["LOP Days"] = document.getElementById("lopdays").value === "yes" ? getValue("LopPayField") : 0;
 }
