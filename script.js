@@ -1911,16 +1911,22 @@ function validateUan(input) {
 }
 
 // Helper to format any YYYY-MM-DD date to DD-MM-YYYY
+
 function formatDateDMY(dateString) {
     if (!dateString) return "";
-    let parts = dateString.split("-");
-    if (parts.length === 3) {
-        // If it's already in YYYY-MM-DD
-        if (parts[0].length === 4) {
-            return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
+    
+    // 1. If it's already in DD-MM-YYYY format, return it as-is
+    if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+        return dateString;
     }
     
+    // 2. If it is in YYYY-MM-DD format (like "2026-06-11"), swap it directly
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        let parts = dateString.split("-");
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
+    // 3. Fallback for other formats (like Excel numbers)
     let date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
     let day = String(date.getDate()).padStart(2, '0');
