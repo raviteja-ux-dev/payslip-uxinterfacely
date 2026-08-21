@@ -33,7 +33,7 @@
         <!--Designation field--> 
           <div class="form-control">
             <label for="Designation">Designation</label>
-            <input class="form-inputs" type="text" id="Designation" value="" name="Designation" required oninput="this.value = this.value.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });">
+            <input class="form-inputs" type="text" id="Designation" value="" name="Designation" required oninput="this.value = this.value.replace(/[^\x20-\x7E]/g, '').replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });">
          </div> 
          
         <!-- Email field --> 
@@ -64,14 +64,14 @@
           <div class="form-control">
             <label for="location">Location</label>
             <input class="form-inputs" type="text" id="location" value="" name="location" required 
-            oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
+            oninput="this.value = this.value.replace(/[^\x20-\x7E]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
           </div>     
          
         <!-- department field -->
           <div class="form-control">
             <label for="Department">Department</label>
             <input class="form-inputs" type="text" id="Department" value="" name="Department" required 
-            oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
+            oninput="this.value = this.value.replace(/[^\x20-\x7E]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
          </div>
 
           <!-- payable days field -->
