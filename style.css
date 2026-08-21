@@ -60,7 +60,7 @@ body {
 
 .action-toolbar button {
     flex: 1;
-    min-width: 170px;
+    min-width: 150px;
     height: 48px;
     font-size: 16px;
     font-weight: 600;
@@ -92,7 +92,7 @@ body {
 .btn-excel { background-color: #28a745; }
 .btn-excel:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(40, 167, 69, 0.25); }
 
-.btn-clear { background-color: #dc3545; }
+.btn-clear { background-color: maroon; }
 .btn-clear:hover { background-color: #c82333; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(220, 53, 69, 0.25); }
 
 /* Pay Slip Layout */

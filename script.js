@@ -472,7 +472,7 @@ async function generatePayslip() {
                 getText("location");
 
             setValue("displayPan", getText("pan"));
-            setValue("joindate", getText("JoinDate"));
+            setValue("joindate", formatDateDMY(document.getElementById("JoinDate").value));
 
             if (document.getElementById("UAN").value === "yes") {
 
@@ -860,7 +860,7 @@ async function viewPayslip(id) {
             p.uan || "";
 
         document.getElementById("joindate").value =
-            p.join_date || "";
+            formatDateDMY(p.join_date || "");
 
 
 
@@ -1644,7 +1644,7 @@ function showGeneratedPayslip(index) {
     document.getElementById("baseLocation").innerText = p.location;
 
     document.getElementById("displayPan").value = p.pan;
-    document.getElementById("joindate").value = p.joindate;
+    document.getElementById("joindate").value = formatDateDMY(p.joindate);
     document.getElementById("displayUan").value = p.uan;
     document.getElementById("displayAnnualCTC").value = p.annualCTC;
 
@@ -1889,6 +1889,20 @@ window.onload = function () {
     hide("PFamountBox");
     hide("uanNumberBox");
     hide("tdsAmountBox");
+
+    // Clear any cached Excel file input and count on refresh
+    const excelInput = document.getElementById("excelFile");
+    if (excelInput) {
+        excelInput.value = "";
+    }
+    employees = [];
+    currentEmployeeIndex = 0;
+    
+    const excelCountEl = document.getElementById("excelCount");
+    if (excelCountEl) excelCountEl.innerText = "0";
+
+    const currentEmployeeEl = document.getElementById("currentEmployee");
+    if (currentEmployeeEl) currentEmployeeEl.innerText = "Payslip 0 of 0";
 };
 
 /* AUTO CALCULATE LISTENERS */
@@ -1916,4 +1930,23 @@ function validateUan(input) {
     } else {
         input.setCustomValidity(""); // Valid UAN
     }
+}
+
+// Helper to format any YYYY-MM-DD date to DD-MM-YYYY
+function formatDateDMY(dateString) {
+    if (!dateString) return "";
+    let parts = dateString.split("-");
+    if (parts.length === 3) {
+        // If it's already in YYYY-MM-DD
+        if (parts[0].length === 4) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+    }
+    
+    let date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    let day = String(date.getDate()).padStart(2, '0');
+    let month = String(date.getMonth() + 1).padStart(2, '0');
+    let year = date.getFullYear();
+    return `${day}-${month}-${year}`;
 }
