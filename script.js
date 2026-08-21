@@ -1270,7 +1270,7 @@ async function downloadPDF() {
 
     pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
 
-    let employee = document.getElementById("empname").value || "Employee";
+    let employee = (document.getElementById("empname").textContent || document.getElementById("empname").value || "").trim() || "Employee";
     let month = document.getElementById("paymonth").value.replace("PAYSLIP FOR THE MONTH OF ", "");
 
     pdf.save(`${employee}_${month}_Payslip.pdf`);
@@ -1285,8 +1285,7 @@ async function sendPayslipEmail() {
         const employeeEmail =
             document.getElementById("email").value.trim();
 
-        const employeeName =
-            document.getElementById("empname").value.trim() || "Employee";
+        const employeeName = (document.getElementById("empname").textContent || document.getElementById("empname").value || "").trim() || "Employee";
         
         const associateId =
             document.getElementById("empid").value.trim();
