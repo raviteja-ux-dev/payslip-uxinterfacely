@@ -39,13 +39,13 @@
         <!-- Email field --> 
           <div class="form-control">
             <label for="email">Employee Email</label>
-            <input type="email" id="email" name="Email" class="form-inputs" placeholder="employee@example.com" required oninput="this.value = this.value.toLowerCase().replace(/\s/g, '')">
+            <input type="email" id="email" name="Email" class="form-inputs" placeholder="employee@example.com" required oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9@._+-]/g, '')">
           </div>
 
         <!--Annual Ctc field-->      
           <div class="form-control">
             <label for="AnnualCTC">Annual CTC</label>
-            <input class="form-inputs" type="number" id="AnnualCTC" value="" name="AnnualCTC" step="0.01" min="0" required title="Please enter a valid numeric amount">
+            <input class="form-inputs" type="number" id="AnnualCTC" value="" name="AnnualCTC" step="0.01" min="0" required  title="Please enter a valid numeric amount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1')">
          </div>         
         
         <!--employee-id field-->  
@@ -64,14 +64,14 @@
           <div class="form-control">
             <label for="location">Location</label>
             <input class="form-inputs" type="text" id="location" value="" name="location" required 
-            oninput="if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
+            oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
           </div>     
          
         <!-- department field -->
           <div class="form-control">
             <label for="Department">Department</label>
             <input class="form-inputs" type="text" id="Department" value="" name="Department" required 
-            oninput="if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
+            oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
          </div>
 
           <!-- payable days field -->
@@ -104,7 +104,7 @@
           <!-- pan field -->
           <div class="form-control">
             <label for="pan">PAN</label>
-            <input class="form-inputs" type="text" id="pan" value="" name="pan" required maxlength="10" pattern="^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$" title="PAN must be exactly 10 characters (e.g., ABCDE1234F)" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+            <input class="form-inputs" type="text" id="pan" value="" name="pan" required maxlength="10" pattern="^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$" title="PAN must be exactly 10 characters (e.g., ABCDE1234F)" style="text-transform: uppercase;" oninput="this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
          </div> 
 
           <!-- variable field -->
@@ -119,7 +119,7 @@
 
           <div class="form-control" id="variablePayAmount" style="display: none;">
               <label for="variableAmount">Variable Pay Amount</label>
-              <input type="number" id="variableAmount" class="form-inputs" name="variablepayamount" oninput="updateVariablePay()">               
+              <input type="number" id="variableAmount" class="form-inputs" name="variablepayamount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updateVariablePay()">              
           </div>
 
           <!-- Bonus field -->
@@ -134,7 +134,7 @@
 
           <div class="form-control" id="BonusAmountBox" style="display:none;">
             <label for="BonusAmount">Bonus Amount</label>
-            <input type="number" id="BonusAmount" class="form-inputs" name="bonusamount" oninput="updateBonus()">
+            <input type="number" id="BonusAmount" class="form-inputs" name="bonusamount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updateBonus()">
           </div>
 
           <!-- PF Field -->
@@ -149,9 +149,9 @@
 
            <div class="form-control" id="PFamountBox" style="display:none;">
               <label>Employee Fund</label>
-              <input class="form-inputs" type="number" id="pfEmployee" oninput="updatePF()">
+              <input class="form-inputs" type="number" id="pfEmployee" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updatePF()">
               <label>Employer Fund</label>
-              <input class="form-inputs" type="number" id="pfEmployer" oninput="updatePF()">
+              <input class="form-inputs" type="number" id="pfEmployer" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updatePF()">
             </div>
           
           <!-- UAN field -->
@@ -184,7 +184,8 @@
           <!--hidden TDS field -->
           <div class="form-control" id="tdsAmountBox" style="display:none;">        
               <label>TDS Amount</label>-
-              <input id="tdsAmount" class="form-inputs"> 
+              <input id="tdsAmount" type="number" class="form-inputs"
+              oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); calculateSalary()"> 
           </div>
         </div>
 
