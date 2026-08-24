@@ -46,6 +46,10 @@ body {
     font-size: 16px;
     font-weight: 500;
 }
+#pan, 
+#displayPan {
+    text-transform: uppercase;
+}
 
 /* Single-Row Action Toolbar */
 .action-toolbar {

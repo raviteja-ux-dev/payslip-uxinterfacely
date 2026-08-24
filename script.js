@@ -462,6 +462,11 @@ async function generatePayslip() {
     // If Excel is uploaded
     if (employees.length > 0) {
         saveCurrentFormToEmployeeArray();
+
+        // Hide layout during loop to eliminate flickering ("flash mob" effect)
+        document.getElementById("payslipLayout").style.display = "none";
+        document.getElementById("actionToolbar").style.display = "none";
+
         generatedPayslips = [];
 
         for (let i = 0; i < employees.length; i++) {
@@ -477,7 +482,7 @@ async function generatePayslip() {
             document.getElementById("baseLocation").innerText =
                 getText("location");
 
-            setValue("displayPan", getText("pan"));
+            setValue("displayPan", getText("pan").toUpperCase());
             setValue("joindate", formatDateDMY(document.getElementById("JoinDate").value));
 
             if (document.getElementById("UAN").value === "yes") {
@@ -504,7 +509,7 @@ async function generatePayslip() {
                 empname: getText("name"),
                 designation: getText("Designation"),
                 location: getText("location"),
-                pan: getText("pan"),
+                pan: getText("pan").toUpperCase(),
                 joindate: document.getElementById("JoinDate").value,
                 uan: getText("uanNumber"),
                 annualCTC: getText("AnnualCTC"),
@@ -556,7 +561,7 @@ async function generatePayslip() {
     document.getElementById("baseLocation").innerText =
         getText("location");
 
-    setValue("displayPan", getText("pan"));
+    setValue("displayPan", getText("pan").toUpperCase());
     setValue("joindate", formatDateDMY(getText("JoinDate")));
 
     if (document.getElementById("UAN").value === "yes") {
@@ -614,7 +619,7 @@ async function saveEmployeeToDatabase() {
         department: getText("Department"),
         location: getText("location"),
 
-        pan: getText("pan"),
+        pan: getText("pan").trim().toUpperCase(),
         uan: getText("uanNumber"),
         
 
@@ -859,7 +864,7 @@ async function viewPayslip(id) {
             p.location || "";
 
         document.getElementById("displayPan").value =
-            p.pan || "";
+            (p.pan || "").toString().toUpperCase();
 
         document.getElementById("displayUan").value =
             p.uan || "";
@@ -1191,7 +1196,7 @@ function addCurrentRowToExcel() {
         "Designation": getText("Designation"),
         "Department": getText("Department"),
         "Location": getText("location"),
-        "PAN": getText("pan"),
+        "PAN": getText("pan").toUpperCase(),
         "UAN": document.getElementById("UAN").value === "yes" ? getText("uanNumber") : "N/A",
         "Start Date": startDateVal,
         "End Date": document.getElementById("endDate").value,
@@ -1506,7 +1511,7 @@ function loadEmployee(index) {
     setValue("endDate", formatExcelDate(emp["End Date"]));
     setValue("JoinDate", formatExcelDate(emp["Join Date"]));
 
-    setValue("pan", emp["PAN"] || "");
+    setValue("pan", (emp["PAN"] || "").toString().trim().toUpperCase());
 
     // ================  VARIABLE PAY ===============
 
@@ -1655,7 +1660,7 @@ function showGeneratedPayslip(index) {
 
     document.getElementById("baseLocation").innerText = p.location;
 
-    document.getElementById("displayPan").value = p.pan;
+    document.getElementById("displayPan").value = (p.pan || "").toString().toUpperCase();
     document.getElementById("joindate").value = formatDateDMY(p.joindate);
     document.getElementById("displayUan").value = p.uan;
     document.getElementById("displayAnnualCTC").value = p.annualCTC;
@@ -1953,7 +1958,7 @@ function saveCurrentFormToEmployeeArray() {
     emp["End Date"] = document.getElementById("endDate").value;
     emp["Join Date"] = document.getElementById("JoinDate").value;
     
-    emp["PAN"] = getText("pan");
+    emp["PAN"] = getText("pan").trim().toUpperCase();
     emp["UAN"] = document.getElementById("UAN").value === "yes" ? getText("uanNumber") : "";
     emp["Variable Pay"] = document.getElementById("variablePay").value === "yes" ? getValue("variableAmount") : 0;
     emp["Bonus"] = document.getElementById("Bonus").value === "yes" ? getValue("BonusAmount") : 0;

@@ -50,7 +50,7 @@
         
         <!--employee-id field-->  
           <div class="form-control">
-            <label for="AssociateID">Associate ID</label>
+            <label for="AssociateID">Employee ID</label>
             <input class="form-inputs" type="text" id="AssociateID" value="" name="AssociateID" required oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
          </div>        
         
@@ -257,7 +257,7 @@
           <tr>
             <th>PAN</th>
             <td>
-              <input type="text" id="displayPan" readonly>
+              <input type="text"   id="displayPan" readonly style= "text-transform: uppercase;">
             </td>
             <th>Date Of Joining</th>
               <td>
