@@ -378,10 +378,6 @@ function togglePF() {
     calculateSalary();
 }
 
-function updatePF() {
-    calculateSalary();
-}
-
 /* UAN */
 function toggleUan() {
     let enabled = document.getElementById("UAN").value === "yes";
@@ -1031,7 +1027,6 @@ async function viewPayslip(id) {
 }
 
 /* SALARY CALCULATION */
-/* SALARY CALCULATION */
 function calculateSalary() {
     let annualCTC = getValue("AnnualCTC");
     let monthlyCTC = annualCTC / 12;
@@ -1069,11 +1064,37 @@ function calculateSalary() {
     let totalEarnings = basic + hra + special + variable + bonus;
     setValue("totalEarnings", totalEarnings.toFixed(2));
 
+    /* ============================================================
+       AUTO CALCULATE PROVIDENT FUND (PF)
+       - Basic Pay < 10,000  : PF Employee = 1200, PF Employer = 1200 (Total 2400 / 30 = 80/day)
+       - Basic Pay >= 10,000 : PF Employee = 1800, PF Employer = 1800 (Total 3600 / 30 = 120/day)
+       - Base = 30 days. Deducts full LOP days (30 - LOP Days). Half days excluded from PF.
+    ============================================================ */
+
     let pfEmployee = 0;
     let pfEmployer = 0;
+
     if (document.getElementById("PFfield").value === "yes") {
-        pfEmployee = getValue("pfEmployee");
-        pfEmployer = getValue("pfEmployer");
+
+        // Base monthly basic calculation (before LOP) to determine tier
+        let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
+        let basePfEach = (fullMonthlyBasic < 10000) ? 1200 : 1800; // 1200 if < 10000, 1800 if >= 10000
+
+        let lopDays = 0;
+        if (document.getElementById("lopdays").value === "yes") {
+            lopDays = Math.floor(getValue("LopPayField")); // Full LOP days only (half days excluded from PF)
+        }
+
+        let pfDays = 30 - lopDays;
+        if (pfDays < 0) pfDays = 0;
+
+        let perDayPfEach = basePfEach / 30; // 40 per day (for 1200) or 60 per day (for 1800)
+
+        pfEmployee = perDayPfEach * pfDays;
+        pfEmployer = perDayPfEach * pfDays;
+
+        setValue("pfEmployee", pfEmployee.toFixed(2));
+        setValue("pfEmployer", pfEmployer.toFixed(2));
     }
 
     let pf = pfEmployee + pfEmployer;
@@ -1554,13 +1575,10 @@ function loadEmployee(index) {
     let pfEmp = Number(emp["PF Employee"]) || 0;
     let pfEmployer = Number(emp["PF Employer"]) || 0;
 
-    if (pfEmp > 0 || pfEmployer > 0) {
+    if (pfEmp > 0 || pfEmployer > 0 || emp["PF"] === "yes") {
 
         document.getElementById("PFfield").value = "yes";
         togglePF();
-
-        setValue("pfEmployee", pfEmp);
-        setValue("pfEmployer", pfEmployer);
 
     } else {
 
@@ -1890,7 +1908,7 @@ window.onload = function () {
 
 /* AUTO CALCULATE LISTENERS */
 const autoCalculateFields = [
-    "AnnualCTC", "variableAmount", "BonusAmount", "pfEmployee", "pfEmployer", "tdsAmount"
+    "AnnualCTC", "variableAmount", "BonusAmount", "tdsAmount", "LopPayField"
 ];
 
 autoCalculateFields.forEach(id => {
