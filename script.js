@@ -408,6 +408,35 @@ function updatelop() {
     calculateDays();
 }
 
+/* Sanitize LOP field (allows .5 half-day entries) without breaking cursor position */
+function sanitizeLopInput(input) {
+
+    const cursorPos = input.selectionStart;
+    const original = input.value;
+
+    // Strip anything that isn't a digit or a dot
+    let stripped = original.replace(/[^0-9.]/g, '');
+
+    // Keep only the first decimal point, drop any extras
+    let parts = stripped.split('.');
+    let cleaned = parts.length > 1
+        ? parts[0] + '.' + parts.slice(1).join('')
+        : parts[0];
+
+    if (cleaned !== original) {
+
+        // Cursor should land after the same count of valid chars
+        // that existed before the cursor in the original string
+        const validCharsBeforeCursor =
+            original.slice(0, cursorPos).replace(/[^0-9.]/g, '').length;
+
+        input.value = cleaned;
+        input.setSelectionRange(validCharsBeforeCursor, validCharsBeforeCursor);
+    }
+
+    updatelop();
+}
+
 /* TDS */
 function toggleTds() {
     let enabled = document.getElementById("tds").value === "yes";
@@ -1068,7 +1097,8 @@ function calculateSalary() {
        AUTO CALCULATE PROVIDENT FUND (PF)
        - Basic Pay < 10,000  : PF Employee = 1200, PF Employer = 1200 (Total 2400 / 30 = 80/day)
        - Basic Pay >= 10,000 : PF Employee = 1800, PF Employer = 1800 (Total 3600 / 30 = 120/day)
-       - Base = 30 days. Deducts full LOP days (30 - LOP Days). Half days excluded from PF.
+       - Base = 30 days. Deducts full LOP days AND half-day LOP (e.g. 1.5, 0.5) proportionally
+         from the 30-day base (30 - LOP Days, LOP Days kept as-is including .5 fractions).
     ============================================================ */
 
     let pfEmployee = 0;
@@ -1082,7 +1112,7 @@ function calculateSalary() {
 
         let lopDays = 0;
         if (document.getElementById("lopdays").value === "yes") {
-            lopDays = Math.floor(getValue("LopPayField")); // Full LOP days only (half days excluded from PF)
+            lopDays = getValue("LopPayField"); // include half-day (.5) LOP in PF deduction
         }
 
         let pfDays = 30 - lopDays;
@@ -1114,7 +1144,7 @@ function calculateSalary() {
     let netSalary = totalEarnings - totalDeduction;
     if (netSalary < 0) netSalary = 0;
 
-    let formattedNetPay = netSalary.toLocaleString('en-US', {
+    let formattedNetPay = netSalary.toLocaleString('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
@@ -1141,7 +1171,7 @@ function numberToWords(num) {
         if (n < 20) return ones[n];
         if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? "-" + ones[n % 10] : "");
         if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred " + convert(n % 100);
-        if (n < 1000000) return convert(Math.floor(n / 1000)) + " Thousand " + convert(n % 1000);
+        if (n < 100000) return convert(Math.floor(n / 1000)) + " Thousand " + convert(n % 1000);
         if (n < 10000000) return convert(Math.floor(n / 100000)) + " Lakh " + convert(n % 100000);
         return convert(Math.floor(n / 10000000)) + " Crore " + convert(n % 10000000);
     }

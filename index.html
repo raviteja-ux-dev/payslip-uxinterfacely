@@ -98,7 +98,7 @@
 
           <div class="form-control" id="Loppaydbox" style="display: none;">
               <label for="loppayfield">Lop Days </label>
-              <input type="number" id="LopPayField" class="form-inputs" name="Lopdaysfield" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, ''); updatelop()">               
+              <input type="text" inputmode="decimal" id="LopPayField" class="form-inputs" name="Lopdaysfield" oninput="sanitizeLopInput(this)">               
           </div>
 
           <!-- pan field -->
@@ -149,9 +149,9 @@
 
            <div class="form-control" id="PFamountBox" style="display:none;">
               <label>Employee Fund</label>
-              <input class="form-inputs" type="number" id="pfEmployee" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updatePF()">
+              <input class="form-inputs" type="number" id="pfEmployee" readonly>
               <label>Employer Fund</label>
-              <input class="form-inputs" type="number" id="pfEmployer" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updatePF()">
+              <input class="form-inputs" type="number" id="pfEmployer" readonly>
             </div>
           
           <!-- UAN field -->
@@ -302,7 +302,7 @@
 
         <!-- Net Pay Statement -->
         <div class="net-pay-statement">
-          Net Pay of Rs. <span id="netpay">0.00</span> ( Rupees <span id="amountWords">Zero</span> Only ) Credited into your bank account.
+          Net Pay of Rs. <span id="netpay">0.00</span> ( <span id="amountWords">Zero</span> Only ) Credited into your bank account.
         </div>
 
         <div class="payslip-footer">
