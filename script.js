@@ -475,6 +475,44 @@ function calculateDays() {
     calculateSalary();
 }
 
+/* JOIN DATE -> START DATE RESTRICTION
+   The start date of the payable period can never fall before the
+   employee's join date (no earlier month, day, or year is allowed).
+   When Join Date changes, the Start Date field's minimum is locked
+   to that date, and if the currently selected Start Date is now
+   invalid (empty or earlier than Join Date), it is reset to the
+   Join Date itself. */
+function applyJoinDateRestriction() {
+    let joinDateVal = document.getElementById("JoinDate").value;
+    let startDateInput = document.getElementById("startDate");
+    let endDateInput = document.getElementById("endDate");
+
+    if (!joinDateVal) return;
+
+    // Lock the Start Date field so no date earlier than Join Date can be picked
+    startDateInput.min = joinDateVal;
+
+    // If Start Date is blank or earlier than Join Date, snap it to Join Date
+    if (!startDateInput.value || startDateInput.value < joinDateVal) {
+        startDateInput.value = joinDateVal;
+    }
+
+    // Keep End Date's minimum in sync with the (possibly updated) Start Date
+    if (startDateInput.value) {
+        endDateInput.min = startDateInput.value;
+        if (endDateInput.value && endDateInput.value < startDateInput.value) {
+            endDateInput.value = "";
+        }
+    }
+
+    calculateDays();
+}
+
+let joinDateField = document.getElementById("JoinDate");
+if (joinDateField) {
+    joinDateField.addEventListener("change", applyJoinDateRestriction);
+}
+
 // /* GENERATE PAYSLIP */
 async function generatePayslip() {
 
@@ -1095,10 +1133,15 @@ function calculateSalary() {
 
     /* ============================================================
        AUTO CALCULATE PROVIDENT FUND (PF)
-       - Basic Pay < 10,000  : PF Employee = 1200, PF Employer = 1200 (Total 2400 / 30 = 80/day)
-       - Basic Pay >= 10,000 : PF Employee = 1800, PF Employer = 1800 (Total 3600 / 30 = 120/day)
-       - Base = 30 days. Deducts full LOP days AND half-day LOP (e.g. 1.5, 0.5) proportionally
-         from the 30-day base (30 - LOP Days, LOP Days kept as-is including .5 fractions).
+       - Basic Pay < 10,000  : PF Employee = 1200, PF Employer = 1200 (Total 2400 for a full month)
+       - Basic Pay >= 10,000 : PF Employee = 1800, PF Employer = 1800 (Total 3600 for a full month)
+       - Base = the actual number of calendar days in the Start Date's month
+         (28/29/30/31), NOT a fixed 30. This matters when the Join Date falls
+         mid-month, since Payable/Worked Days will be less than a full month.
+       - PF is paid on "DaysWorked" (the same figure used for salary proration),
+         which already has LOP days (full and half-day, e.g. 1.5, 0.5) removed.
+         So a mid-month join and/or LOP both reduce PF proportionally, in line
+         with the actual days worked based on the Start Date.
     ============================================================ */
 
     let pfEmployee = 0;
@@ -1106,19 +1149,25 @@ function calculateSalary() {
 
     if (document.getElementById("PFfield").value === "yes") {
 
-        // Base monthly basic calculation (before LOP) to determine tier
+        // Base monthly basic calculation (before proration) to determine tier
         let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
         let basePfEach = (fullMonthlyBasic < 10000) ? 1200 : 1800; // 1200 if < 10000, 1800 if >= 10000
 
-        let lopDays = 0;
-        if (document.getElementById("lopdays").value === "yes") {
-            lopDays = getValue("LopPayField"); // include half-day (.5) LOP in PF deduction
+        // Actual number of days in the Start Date's calendar month (28-31),
+        // matching the same base used to prorate salary above.
+        let totalMonthDaysForPf = 30;
+        if (startDate) {
+            let sDate = new Date(startDate);
+            totalMonthDaysForPf = new Date(sDate.getFullYear(), sDate.getMonth() + 1, 0).getDate();
         }
 
-        let pfDays = 30 - lopDays;
+        // Worked days already accounts for a mid-month Join Date (shorter
+        // Start-to-End range) and any LOP days deducted in calculateDays().
+        let pfDays = workedDays;
         if (pfDays < 0) pfDays = 0;
+        if (pfDays > totalMonthDaysForPf) pfDays = totalMonthDaysForPf;
 
-        let perDayPfEach = basePfEach / 30; // 40 per day (for 1200) or 60 per day (for 1800)
+        let perDayPfEach = basePfEach / totalMonthDaysForPf;
 
         pfEmployee = perDayPfEach * pfDays;
         pfEmployer = perDayPfEach * pfDays;
@@ -1561,6 +1610,14 @@ function loadEmployee(index) {
     setValue("startDate", formatExcelDate(emp["Start Date"]));
     setValue("endDate", formatExcelDate(emp["End Date"]));
     setValue("JoinDate", formatExcelDate(emp["Join Date"]));
+
+    // Lock the Start Date field's minimum to this employee's Join Date so any
+    // manual edit afterwards can't move it earlier (Excel-supplied Start Date
+    // itself is trusted as-is and left untouched here).
+    let excelJoinDateVal = document.getElementById("JoinDate").value;
+    if (excelJoinDateVal) {
+        document.getElementById("startDate").min = excelJoinDateVal;
+    }
 
     setValue("pan", (emp["PAN"] || "").toString().trim().toUpperCase());
 
