@@ -18,6 +18,65 @@ function setValue(id, value) {
     }
 }
 
+
+/*=========================================================== */
+function autoFitInputText(el, baseSizePx) {
+    if (!el) return;
+
+    const isFormField = el.tagName === "INPUT" || el.tagName === "TEXTAREA";
+    const text = isFormField ? el.value : el.textContent;
+
+    const defaultSize = baseSizePx || 16;
+    el.style.fontSize = defaultSize + "px";
+
+    if (!text) return;
+
+    const computed = window.getComputedStyle(el);
+    const probe = document.createElement("span");
+    probe.style.visibility = "hidden";
+    probe.style.position = "absolute";
+    probe.style.whiteSpace = "pre";
+    probe.style.left = "-9999px";
+    probe.style.top = "-9999px";
+    probe.style.fontFamily = computed.fontFamily;
+    probe.style.fontWeight = computed.fontWeight;
+    probe.style.letterSpacing = computed.letterSpacing;
+    probe.textContent = text;
+    document.body.appendChild(probe);
+
+    const paddingLeft = parseFloat(computed.paddingLeft) || 0;
+    const paddingRight = parseFloat(computed.paddingRight) || 0;
+    const available = el.clientWidth - paddingLeft - paddingRight - 4;
+
+    const minSize = 10;
+    let size = defaultSize;
+
+    if (available > 0) {
+        probe.style.fontSize = size + "px";
+        while (probe.scrollWidth > available && size > minSize) {
+            size -= 0.5;
+            probe.style.fontSize = size + "px";
+        }
+        el.style.fontSize = size + "px";
+    }
+
+    document.body.removeChild(probe);
+}
+
+// Form fields prone to long free-text entries (Name, Designation, Location, Department)
+function autoFitFormFields() {
+    ["name", "Designation", "location", "Department"].forEach((id) =>
+        autoFitInputText(document.getElementById(id))
+    );
+}
+
+// Their counterparts shown on the rendered payslip
+function autoFitPayslipFields() {
+    ["empname", "designation", "baseLocation"].forEach((id) =>
+        autoFitInputText(document.getElementById(id))
+    );
+}
+
 function show(id) {
     document.getElementById(id).style.display = "block";
 }
@@ -170,15 +229,13 @@ function renderViewedSalaryTable(p) {
     const tds =
         Number(p.tds) || 0;
 
-    // =========================
+    
     // Professional Tax
-    // =========================
+   
 
     const professionalTax = 200;
 
-    // =========================
-    // Earnings List
-    // =========================
+    // Earnings List   
 
     let earningsList = [
 
@@ -513,6 +570,16 @@ if (joinDateField) {
     joinDateField.addEventListener("change", applyJoinDateRestriction);
 }
 
+// Re-fit Name / Designation / Location / Department as the user types,
+// so a long value never runs silently past the edge of its field.
+["name", "Designation", "location", "Department"].forEach((id) => {
+    let fieldEl = document.getElementById(id);
+    if (fieldEl) {
+        fieldEl.addEventListener("input", () => autoFitInputText(fieldEl));
+    }
+});
+window.addEventListener("resize", autoFitFormFields);
+
 // /* GENERATE PAYSLIP */
 async function generatePayslip() {
 
@@ -637,6 +704,8 @@ async function generatePayslip() {
 
     }
     setValue("displayAnnualCTC", getText("AnnualCTC"));
+
+    autoFitPayslipFields();
 
     calculateDays();
     calculateSalary();
@@ -940,6 +1009,8 @@ async function viewPayslip(id) {
         if (document.getElementById("displayAnnualCTC")) {
             document.getElementById("displayAnnualCTC").value = p.annual_ctc || "";
         }
+
+        autoFitPayslipFields();
 
         // ====================  CALCULATE SALARY VALUES ======================
 
@@ -1603,6 +1674,8 @@ function loadEmployee(index) {
 
     setValue("AnnualCTC", emp["Annual CTC"] || "");
 
+    autoFitFormFields();
+
     console.log("Start Date:", emp["Start Date"]);
     console.log("End Date:", emp["End Date"]);
     console.log("Join Date:", emp["Join Date"]);
@@ -1769,6 +1842,8 @@ function showGeneratedPayslip(index) {
     document.getElementById("joindate").value = formatDateDMY(p.joindate);
     document.getElementById("displayUan").value = p.uan;
     document.getElementById("displayAnnualCTC").value = p.annualCTC;
+
+    autoFitPayslipFields();
 
     // Salary Table
     document.getElementById("salaryTableBody").innerHTML = p.salaryTable;

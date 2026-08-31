@@ -144,8 +144,16 @@ body {
     padding: 12px;
     border: 1.5px solid #000;
     font-size: 16px;
-    text-align: justify;
     font-weight: bold;
+}
+
+.emp-table th {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.emp-table td {
+    text-align: justify;
 }
 
 .emp-table td input {
