@@ -18,8 +18,17 @@ function setValue(id, value) {
     }
 }
 
-
-/*=========================================================== */
+/* ============================================================
+   AUTO-FIT LONG TEXT (Designation, Name, Location, Department,
+   and their payslip counterparts)
+   These fields sit in fixed-width boxes (the form grid, or a
+   payslip table cell). At a fixed font size, a long value can run
+   past the edge of the box and effectively be cut off from view.
+   Instead of letting that happen silently, this shrinks the field's
+   font size just enough for the whole value to stay visible, and
+   restores the normal size automatically once the text is short
+   enough to fit again.
+============================================================ */
 function autoFitInputText(el, baseSizePx) {
     if (!el) return;
 
@@ -112,7 +121,10 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
         earningsList.push({ label: "Bonus", val: bonus.toFixed(2) });
     }
 
-    // 2. Build list of active Deductions (Separate PF rows for Employee & Employer)
+    // 2. Build list of active Deductions
+    // Both PF Employee and PF Employer count under PF here. Employee's
+    // share prorates with LOP/days worked; Employer's share stays flat
+    // (see calculateSalary()) — but both are shown and both add to the total.
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
@@ -212,6 +224,9 @@ function renderViewedSalaryTable(p) {
     // =========================
     // PF
     // =========================
+    // Both PF Employee and PF Employer count under PF and under total
+    // deductions here. Employee's share prorates with leave; Employer's
+    // share is stored as the flat tier amount (see calculateSalary()).
 
     const pfEmployee =
         Number(p.pf_employee) || 0;
@@ -229,13 +244,15 @@ function renderViewedSalaryTable(p) {
     const tds =
         Number(p.tds) || 0;
 
-    
+    // =========================
     // Professional Tax
-   
+    // =========================
 
     const professionalTax = 200;
 
-    // Earnings List   
+    // =========================
+    // Earnings List
+    // =========================
 
     let earningsList = [
 
@@ -290,8 +307,15 @@ function renderViewedSalaryTable(p) {
 
         deductionsList.push({
 
-            label: "Provident Fund",
-            val: pf.toFixed(2)
+            label: "PF - Employee Fund",
+            val: pfEmployee.toFixed(2)
+
+        });
+
+        deductionsList.push({
+
+            label: "PF - Employer Fund",
+            val: pfEmployer.toFixed(2)
 
         });
 
@@ -1071,6 +1095,9 @@ async function viewPayslip(id) {
 
 
         // =====================  DEDUCTIONS =====================
+        // Both PF Employee and PF Employer count under PF/deductions here.
+        // Employee's share prorates with leave; Employer's share is the
+        // flat tier amount stored on the record.
 
         let pfEmployee =
             Number(p.pf_employee) || 0;
@@ -1202,18 +1229,7 @@ function calculateSalary() {
     let totalEarnings = basic + hra + special + variable + bonus;
     setValue("totalEarnings", totalEarnings.toFixed(2));
 
-    /* ============================================================
-       AUTO CALCULATE PROVIDENT FUND (PF)
-       - Basic Pay < 10,000  : PF Employee = 1200, PF Employer = 1200 (Total 2400 for a full month)
-       - Basic Pay >= 10,000 : PF Employee = 1800, PF Employer = 1800 (Total 3600 for a full month)
-       - Base = the actual number of calendar days in the Start Date's month
-         (28/29/30/31), NOT a fixed 30. This matters when the Join Date falls
-         mid-month, since Payable/Worked Days will be less than a full month.
-       - PF is paid on "DaysWorked" (the same figure used for salary proration),
-         which already has LOP days (full and half-day, e.g. 1.5, 0.5) removed.
-         So a mid-month join and/or LOP both reduce PF proportionally, in line
-         with the actual days worked based on the Start Date.
-    ============================================================ */
+    /* ============================= AUTO CALCULATE PROVIDENT FUND (PF) ===============================  */
 
     let pfEmployee = 0;
     let pfEmployer = 0;
@@ -1238,15 +1254,21 @@ function calculateSalary() {
         if (pfDays < 0) pfDays = 0;
         if (pfDays > totalMonthDaysForPf) pfDays = totalMonthDaysForPf;
 
-        let perDayPfEach = basePfEach / totalMonthDaysForPf;
+        let perDayPfEmployee = basePfEach / totalMonthDaysForPf;
 
-        pfEmployee = perDayPfEach * pfDays;
-        pfEmployer = perDayPfEach * pfDays;
+        // Employee's PF shrinks with LOP / partial-month worked days.
+        pfEmployee = perDayPfEmployee * pfDays;
+
+        // Employer's PF is always the flat tier amount — never prorated.
+        pfEmployer = basePfEach;
 
         setValue("pfEmployee", pfEmployee.toFixed(2));
         setValue("pfEmployer", pfEmployer.toFixed(2));
     }
 
+    // Both PF Employee and PF Employer count under total PF (and so under
+    // Total Deductions). Employee's share prorates with LOP/days worked;
+    // Employer's share is always the flat tier amount (set above).
     let pf = pfEmployee + pfEmployer;
     let professionalTax = 200;
 
