@@ -122,14 +122,14 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
     }
 
     // 2. Build list of active Deductions
-    // Both PF Employee and PF Employer count under PF here. Employee's
-    // share prorates with LOP/days worked; Employer's share stays flat
-    // (see calculateSalary()) — but both are shown and both add to the total.
+    // Only PF Employee reduces the employee's Net Pay, so only that row
+    // appears under Deductions. PF Employer is a cost to the company
+    // (already set aside from Special Allowance in calculateSalary()) and
+    // is not shown as a deduction here.
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
         deductionsList.push({ label: "PF - Employee Fund", val: pfEmployee.toFixed(2) });
-        deductionsList.push({ label: "PF - Employer Fund", val: pfEmployer.toFixed(2) });
     }
 
     deductionsList.push({ label: "Professional Tax", val: professionalTax.toFixed(2) });
@@ -212,21 +212,13 @@ function renderViewedSalaryTable(p) {
         monthlyCTC * 0.50;
 
     const hra =
-        monthlyCTC * 0.20;
-
-    let special =
-        monthlyCTC - basic - hra - variable;
-
-    if (special < 0) {
-        special = 0;
-    }
+        basic * 0.40;
 
     // =========================
     // PF
     // =========================
-    // Both PF Employee and PF Employer count under PF and under total
-    // deductions here. Employee's share prorates with leave; Employer's
-    // share is stored as the flat tier amount (see calculateSalary()).
+    // Only PF Employee reduces Net Pay. PF Employer is a cost to the
+    // company (set aside from Special Allowance below, not a deduction).
 
     const pfEmployee =
         Number(p.pf_employee) || 0;
@@ -234,8 +226,15 @@ function renderViewedSalaryTable(p) {
     const pfEmployer =
         Number(p.pf_employer) || 0;
 
-    const pf =
-        pfEmployee + pfEmployer;
+    // Special Allowance carved the PF set-aside out of CTC only when PF
+    // applied to this slip. Variable Pay/Bonus are additions on top of
+    // CTC, so they aren't subtracted here.
+    let special =
+        monthlyCTC - basic - hra - (pfEmployer > 0 ? pfEmployer : 0);
+
+    if (special < 0) {
+        special = 0;
+    }
 
     // =========================
     // TDS
@@ -302,20 +301,13 @@ function renderViewedSalaryTable(p) {
 
     let deductionsList = [];
 
-    // PF
-    if (pf > 0) {
+    // PF - only the Employee's share is a deduction from Net Pay.
+    if (pfEmployee > 0 || pfEmployer > 0) {
 
         deductionsList.push({
 
             label: "PF - Employee Fund",
             val: pfEmployee.toFixed(2)
-
-        });
-
-        deductionsList.push({
-
-            label: "PF - Employer Fund",
-            val: pfEmployer.toFixed(2)
 
         });
 
@@ -1076,7 +1068,7 @@ async function viewPayslip(id) {
             monthlyCTC * 0.50;
 
         let hra =
-            monthlyCTC * 0.20;
+            basic * 0.40;
 
         let variable =
             Number(p.variable_pay) || 0;
@@ -1084,20 +1076,9 @@ async function viewPayslip(id) {
         let bonus =
             Number(p.bonus) || 0;
 
-        let special =
-            monthlyCTC - basic - hra - variable;
-
-        if (special < 0) {
-
-            special = 0;
-
-        }
-
-
         // =====================  DEDUCTIONS =====================
-        // Both PF Employee and PF Employer count under PF/deductions here.
-        // Employee's share prorates with leave; Employer's share is the
-        // flat tier amount stored on the record.
+        // Only PF Employee reduces Net Pay. PF Employer is a cost to the
+        // company (set aside from Special Allowance, not a deduction).
 
         let pfEmployee =
             Number(p.pf_employee) || 0;
@@ -1105,8 +1086,17 @@ async function viewPayslip(id) {
         let pfEmployer =
             Number(p.pf_employer) || 0;
 
-        let pf =
-            pfEmployee + pfEmployer;
+        // Special Allowance carved the PF set-aside out of CTC only when
+        // PF applied to this slip (pfEmployer > 0 means it did). Variable
+        // Pay/Bonus are additions on top of CTC, so they aren't subtracted.
+        let special =
+            monthlyCTC - basic - hra - (pfEmployer > 0 ? pfEmployer : 0);
+
+        if (special < 0) {
+
+            special = 0;
+
+        }
 
         let professionalTax = 200;
 
@@ -1122,7 +1112,7 @@ async function viewPayslip(id) {
             bonus > 0 ? "yes" : "no";
 
         document.getElementById("PFfield").value =
-            pf > 0 ? "yes" : "no";
+            (pfEmployee > 0 || pfEmployer > 0) ? "yes" : "no";
 
         document.getElementById("tds").value =
             TDS > 0 ? "yes" : "no";
@@ -1201,9 +1191,16 @@ function calculateSalary() {
 
     let startDate = document.getElementById("startDate").value;
 
-    if (startDate && payableDays > 0) {
+    // Days in the Start Date's calendar month (28-31) — used both to
+    // prorate salary for LOP/partial months below, and further down to
+    // prorate the employee's PF share the same way.
+    let totalMonthDays = 30;
+    if (startDate) {
         let date = new Date(startDate);
-        let totalMonthDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+        totalMonthDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    }
+
+    if (startDate && payableDays > 0) {
         let perDaySalary = monthlyCTC / totalMonthDays;
         monthlyCTC = perDaySalary * workedDays;
     } else {
@@ -1211,7 +1208,7 @@ function calculateSalary() {
     }
 
     let basic = monthlyCTC * 0.50;
-    let hra = monthlyCTC * 0.20;
+    let hra = basic * 0.40;
 
     let variable = 0;
     if (document.getElementById("variablePay").value === "yes") {
@@ -1223,7 +1220,23 @@ function calculateSalary() {
         bonus = getValue("BonusAmount");
     }
 
-    let special = monthlyCTC - basic - hra - variable;
+    /* ============================= PROVIDENT FUND (PF) TIER ===============================
+       PF is 12% of Basic, capped at Rs. 1800 (the statutory wage-ceiling
+       equivalent of 12% of Rs. 15,000). The tier is decided off the FULL
+       (unprorated) monthly Basic so a mid-month join/LOP never pushes
+       someone across the threshold. This same amount is what Special
+       Allowance sets aside for PF below — whether or not PF is actually
+       enabled for this slip. */
+    let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
+    let basePfEach = (fullMonthlyBasic > 15000) ? 1800 : (fullMonthlyBasic * 0.12);
+
+    let pfEnabled = document.getElementById("PFfield").value === "yes";
+
+    // Special Allowance is whatever's left of CTC after Basic, HRA, and
+    // the PF set-aside (only when PF applies) are carved out. Variable
+    // Pay and Bonus are additions on top of CTC, not carved out of it,
+    // so they no longer reduce Special Allowance.
+    let special = monthlyCTC - basic - hra - (pfEnabled ? basePfEach : 0);
     if (special < 0) special = 0;
 
     let totalEarnings = basic + hra + special + variable + bonus;
@@ -1234,42 +1247,29 @@ function calculateSalary() {
     let pfEmployee = 0;
     let pfEmployer = 0;
 
-    if (document.getElementById("PFfield").value === "yes") {
-
-        // Base monthly basic calculation (before proration) to determine tier
-        let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
-        let basePfEach = (fullMonthlyBasic < 10000) ? 1200 : 1800; // 1200 if < 10000, 1800 if >= 10000
-
-        // Actual number of days in the Start Date's calendar month (28-31),
-        // matching the same base used to prorate salary above.
-        let totalMonthDaysForPf = 30;
-        if (startDate) {
-            let sDate = new Date(startDate);
-            totalMonthDaysForPf = new Date(sDate.getFullYear(), sDate.getMonth() + 1, 0).getDate();
-        }
+    if (pfEnabled) {
 
         // Worked days already accounts for a mid-month Join Date (shorter
         // Start-to-End range) and any LOP days deducted in calculateDays().
         let pfDays = workedDays;
         if (pfDays < 0) pfDays = 0;
-        if (pfDays > totalMonthDaysForPf) pfDays = totalMonthDaysForPf;
+        if (pfDays > totalMonthDays) pfDays = totalMonthDays;
 
-        let perDayPfEmployee = basePfEach / totalMonthDaysForPf;
+        let perDayPfEmployee = basePfEach / totalMonthDays;
 
         // Employee's PF shrinks with LOP / partial-month worked days.
         pfEmployee = perDayPfEmployee * pfDays;
 
-        // Employer's PF is always the flat tier amount — never prorated.
+        // Employer's PF is always the flat/tier amount — never prorated.
         pfEmployer = basePfEach;
 
         setValue("pfEmployee", pfEmployee.toFixed(2));
         setValue("pfEmployer", pfEmployer.toFixed(2));
     }
 
-    // Both PF Employee and PF Employer count under total PF (and so under
-    // Total Deductions). Employee's share prorates with LOP/days worked;
-    // Employer's share is always the flat tier amount (set above).
-    let pf = pfEmployee + pfEmployer;
+    // Only PF Employee reduces the employee's take-home pay. Employer's
+    // share is a cost to the company (already set aside from Special
+    // Allowance above) — it is not a deduction from Net Pay.
     let professionalTax = 200;
 
     let TDS = 0;
@@ -1277,7 +1277,7 @@ function calculateSalary() {
         TDS = getValue("tdsAmount");
     }
 
-    let totalDeduction = pf + professionalTax + TDS;
+    let totalDeduction = pfEmployee + professionalTax + TDS;
     setValue("totalDeduction", totalDeduction.toFixed(2));
 
     // Render table with separate PF rows
