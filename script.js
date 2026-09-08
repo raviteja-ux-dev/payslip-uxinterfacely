@@ -1348,14 +1348,10 @@ function calculateSalary() {
 function numberToWords(num) {
     num = Number(num) || 0;
 
-    // Split into whole Rupees and Paise so the exact amount is reflected
-    // in words instead of being rounded off to the nearest Rupee.
+    // Only whole Rupees are spelled out — paise are dropped (truncated,
+    // not rounded), so 423001.52 reads as "...One Rupees", not rounded
+    // up to 423002.
     let rupees = Math.floor(num + 1e-9);
-    let paise = Math.round((num - rupees) * 100);
-    if (paise >= 100) {
-        rupees += 1;
-        paise -= 100;
-    }
 
     const ones = [
         "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
@@ -1379,14 +1375,7 @@ function numberToWords(num) {
 
     let rupeesWords = (rupees === 0 ? "Zero" : convert(rupees)).replace(/\s+/g, " ").trim();
 
-    let result = rupeesWords + " Rupees";
-
-    if (paise > 0) {
-        let paiseWords = convert(paise).replace(/\s+/g, " ").trim();
-        result += " and " + paiseWords + " Paise";
-    }
-
-    return result;
+    return rupeesWords + " Rupees";
 }
 
 /* print - button */
