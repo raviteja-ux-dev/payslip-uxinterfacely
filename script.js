@@ -105,7 +105,7 @@ function hide(id) {
 
 /* ========== SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW) =======*/
 
-function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS) {
+function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS, foodCoupon) {
     // 1. Build list of active Earnings
     let earningsList = [
         { label: "Basic Salary", val: basic.toFixed(2) },
@@ -129,13 +129,17 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
-        deductionsList.push({ label: "Provident Fund", val: pfEmployee.toFixed(2) });
+        deductionsList.push({ label: "PF - Employee Fund", val: pfEmployee.toFixed(2) });
     }
 
     deductionsList.push({ label: "Professional Tax", val: professionalTax.toFixed(2) });
 
     if (document.getElementById("tds").value === "yes") {
         deductionsList.push({ label: "TDS", val: TDS.toFixed(2) });
+    }
+
+    if (document.getElementById("foodCoupon").value === "yes") {
+        deductionsList.push({ label: "Food Coupon", val: foodCoupon.toFixed(2) });
     }
 
     // 3. Render rows into the single table
@@ -244,6 +248,13 @@ function renderViewedSalaryTable(p) {
         Number(p.tds) || 0;
 
     // =========================
+    // Food Coupon
+    // =========================
+
+    const foodCoupon =
+        Number(p.food_coupon) || 0;
+
+    // =========================
     // Professional Tax
     // =========================
 
@@ -306,7 +317,7 @@ function renderViewedSalaryTable(p) {
 
         deductionsList.push({
 
-            label: "Providednt Fund",
+            label: "PF - Employee Fund",
             val: pfEmployee.toFixed(2)
 
         });
@@ -328,6 +339,18 @@ function renderViewedSalaryTable(p) {
 
             label: "TDS",
             val: tds.toFixed(2)
+
+        });
+
+    }
+
+    // Food Coupon
+    if (foodCoupon > 0) {
+
+        deductionsList.push({
+
+            label: "Food Coupon",
+            val: foodCoupon.toFixed(2)
 
         });
 
@@ -518,6 +541,18 @@ function toggleTds() {
     } else {
         hide("tdsAmountBox");
         setValue("tdsAmount", "");
+    }
+    calculateSalary();
+}
+
+/* FOOD COUPON */
+function toggleFoodCoupon() {
+    let enabled = document.getElementById("foodCoupon").value === "yes";
+    if (enabled) {
+        show("foodCouponAmountBox");
+    } else {
+        hide("foodCouponAmountBox");
+        setValue("foodCouponAmount", "");
     }
     calculateSalary();
 }
@@ -788,6 +823,7 @@ async function saveEmployeeToDatabase() {
         pf_employer: getValue("pfEmployer"),
 
         tds: getValue("tdsAmount"),
+        food_coupon: getValue("foodCouponAmount"),
 
         total_earnings: getValue("totalEarnings"),
         total_deductions: getValue("totalDeduction"),
@@ -828,6 +864,7 @@ async function saveEmployeeToDatabase() {
         pf_employer: getValue("pfEmployer"),
 
         tds: getValue("tdsAmount"),
+        food_coupon: getValue("foodCouponAmount"),
 
         total_earnings: getValue("totalEarnings"),
         total_deductions: getValue("totalDeduction"),
@@ -1103,6 +1140,9 @@ async function viewPayslip(id) {
         let TDS =
             Number(p.tds) || 0;
 
+        let foodCoupon =
+            Number(p.food_coupon) || 0;
+
 
         // Restore optional salary selections
         document.getElementById("variablePay").value =
@@ -1117,6 +1157,9 @@ async function viewPayslip(id) {
         document.getElementById("tds").value =
             TDS > 0 ? "yes" : "no";
 
+        document.getElementById("foodCoupon").value =
+            foodCoupon > 0 ? "yes" : "no";
+
         // ===================== RENDER SALARY TABLE =====================
 
 
@@ -1129,7 +1172,8 @@ async function viewPayslip(id) {
             pfEmployee,
             pfEmployer,
             professionalTax,
-            TDS
+            TDS,
+            foodCoupon
         );
 
 
@@ -1155,7 +1199,7 @@ async function viewPayslip(id) {
 
         document.getElementById("amountWords").innerText =
             numberToWords(
-                Math.round(Number(p.net_salary))
+                Number(p.net_salary)
             );
 
 
@@ -1277,11 +1321,16 @@ function calculateSalary() {
         TDS = getValue("tdsAmount");
     }
 
-    let totalDeduction = pfEmployee + professionalTax + TDS;
+    let foodCoupon = 0;
+    if (document.getElementById("foodCoupon").value === "yes") {
+        foodCoupon = getValue("foodCouponAmount");
+    }
+
+    let totalDeduction = pfEmployee + professionalTax + TDS + foodCoupon;
     setValue("totalDeduction", totalDeduction.toFixed(2));
 
     // Render table with separate PF rows
-    renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS);
+    renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS, foodCoupon);
 
     let netSalary = totalEarnings - totalDeduction;
     if (netSalary < 0) netSalary = 0;
@@ -1292,12 +1341,21 @@ function calculateSalary() {
     });
 
     document.getElementById("netpay").innerText = formattedNetPay;
-    document.getElementById("amountWords").innerText = numberToWords(Math.round(netSalary));
+    document.getElementById("amountWords").innerText = numberToWords(netSalary);
 }
 
 /* NUMBER TO WORDS */
 function numberToWords(num) {
-    if (num === 0) return "Zero";
+    num = Number(num) || 0;
+
+    // Split into whole Rupees and Paise so the exact amount is reflected
+    // in words instead of being rounded off to the nearest Rupee.
+    let rupees = Math.floor(num + 1e-9);
+    let paise = Math.round((num - rupees) * 100);
+    if (paise >= 100) {
+        rupees += 1;
+        paise -= 100;
+    }
 
     const ones = [
         "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
@@ -1310,6 +1368,7 @@ function numberToWords(num) {
     ];
 
     function convert(n) {
+        if (n === 0) return "";
         if (n < 20) return ones[n];
         if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? "-" + ones[n % 10] : "");
         if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred " + convert(n % 100);
@@ -1318,7 +1377,16 @@ function numberToWords(num) {
         return convert(Math.floor(n / 10000000)) + " Crore " + convert(n % 10000000);
     }
 
-    return convert(num).replace(/\s+/g, " ").trim();
+    let rupeesWords = (rupees === 0 ? "Zero" : convert(rupees)).replace(/\s+/g, " ").trim();
+
+    let result = rupeesWords + " Rupees";
+
+    if (paise > 0) {
+        let paiseWords = convert(paise).replace(/\s+/g, " ").trim();
+        result += " and " + paiseWords + " Paise";
+    }
+
+    return result;
 }
 
 /* print - button */
@@ -1787,6 +1855,24 @@ function loadEmployee(index) {
 
     }
 
+    // =============== FOOD COUPON ================
+
+    let foodCoupon = Number(emp["Food Coupon"]) || 0;
+
+    if (foodCoupon > 0) {
+
+        document.getElementById("foodCoupon").value = "yes";
+        toggleFoodCoupon();
+
+        setValue("foodCouponAmount", foodCoupon);
+
+    } else {
+
+        document.getElementById("foodCoupon").value = "no";
+        toggleFoodCoupon();
+
+    }
+
     // ================  UAN ===============
 
     let uan = emp["UAN"] || "";
@@ -2051,7 +2137,8 @@ function downloadExcelTemplate() {
             "PF Employee": "",
             "PF Employer": "",
 
-            "TDS": ""
+            "TDS": "",
+            "Food Coupon": ""
 
         }
 
@@ -2074,6 +2161,7 @@ window.onload = function () {
     hide("PFamountBox");
     hide("uanNumberBox");
     hide("tdsAmountBox");
+    hide("foodCouponAmountBox");
 
     // Clear any cached Excel file input and count on refresh
     const excelInput = document.getElementById("excelFile");
@@ -2092,7 +2180,7 @@ window.onload = function () {
 
 /* AUTO CALCULATE LISTENERS */
 const autoCalculateFields = [
-    "AnnualCTC", "variableAmount", "BonusAmount", "tdsAmount", "LopPayField"
+    "AnnualCTC", "variableAmount", "BonusAmount", "tdsAmount", "foodCouponAmount", "LopPayField"
 ];
 
 autoCalculateFields.forEach(id => {
@@ -2167,5 +2255,6 @@ function saveCurrentFormToEmployeeArray() {
     emp["PF Employee"] = document.getElementById("PFfield").value === "yes" ? getValue("pfEmployee") : 0;
     emp["PF Employer"] = document.getElementById("PFfield").value === "yes" ? getValue("pfEmployer") : 0;
     emp["TDS"] = document.getElementById("tds").value === "yes" ? getValue("tdsAmount") : 0;
+    emp["Food Coupon"] = document.getElementById("foodCoupon").value === "yes" ? getValue("foodCouponAmount") : 0;
     emp["LOP Days"] = document.getElementById("lopdays").value === "yes" ? getValue("LopPayField") : 0;
 }

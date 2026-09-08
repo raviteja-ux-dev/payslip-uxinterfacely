@@ -47,6 +47,11 @@ body {
     font-weight: 500;
 }
 
+/* Selects were using the browser's native dropdown chrome, which reserves
+   extra space on the right for the arrow — pushing the selected text off
+   toward one edge instead of sitting evenly between the same 14px left/
+   right padding the text inputs use. Custom-drawn arrow keeps padding
+   symmetric on both sides. */
 select.form-inputs {
     appearance: none;
     -webkit-appearance: none;
@@ -96,9 +101,13 @@ select.form-inputs {
     text-align: center;
 }
 
+/* Generate Payslips button: smaller than the other toolbars, and its
+   width is scaled to roughly match the span from the UAN field to the
+   TDS field in the 4-column form grid above (2 of the 4 columns, minus
+   the grid gap) instead of stretching the full row width. */
 #formToolbar {
-    max-width: calc(50% - 25px);
-    margin: 40px auto 20px auto;
+    max-width: calc(50% - 10px);
+    margin: 35px auto 20px auto;
 }
 
 #formToolbar .btn-primary {
