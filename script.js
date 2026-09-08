@@ -1233,20 +1233,37 @@ function calculateSalary() {
     let payableDays = getValue("DaysPayable");
     let workedDays = getValue("DaysWorked");
 
+    // LOP is always a literal number of days (never normalized) — 1 day
+    // off always costs 1 day's pay. Everything else about the period
+    // (a full month, or a partial month from a mid-month join/exit) is
+    // what gets normalized onto the fixed 30-day standard below.
+    let lopDaysTaken = payableDays - workedDays;
+    if (lopDaysTaken < 0) lopDaysTaken = 0;
+
     let startDate = document.getElementById("startDate").value;
 
-    // Days in the Start Date's calendar month (28-31) — used both to
-    // prorate salary for LOP/partial months below, and further down to
-    // prorate the employee's PF share the same way.
-    let totalMonthDays = 30;
-    if (startDate) {
-        let date = new Date(startDate);
-        totalMonthDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-    }
+    // Fixed 30-day standard month: every calendar month — whether it
+    // actually has 28, 29, 30 or 31 days — is normalized onto a 30-day
+    // cycle for pay-rate purposes, so 1 LOP day costs the same amount
+    // no matter which month it falls in (Feb included). Days Payable /
+    // Days Worked shown on the form still reflect the real calendar
+    // dates entered; only the rate math below uses the normalized value.
+    const STANDARD_MONTH_DAYS = 30;
+
+    let normalizedWorkedDays = 0;
 
     if (startDate && payableDays > 0) {
-        let perDaySalary = monthlyCTC / totalMonthDays;
-        monthlyCTC = perDaySalary * workedDays;
+        let date = new Date(startDate);
+        let actualMonthDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+
+        // Scale actual days payable onto the 30-day standard — a full
+        // calendar month, whatever its real length, always normalizes
+        // to exactly 30 here — then subtract LOP as literal days.
+        let normalizedPayableDays = payableDays * (STANDARD_MONTH_DAYS / actualMonthDays);
+        normalizedWorkedDays = normalizedPayableDays - lopDaysTaken;
+
+        let perDaySalary = monthlyCTC / STANDARD_MONTH_DAYS;
+        monthlyCTC = perDaySalary * normalizedWorkedDays;
     } else {
         monthlyCTC = 0;
     }
@@ -1293,13 +1310,13 @@ function calculateSalary() {
 
     if (pfEnabled) {
 
-        // Worked days already accounts for a mid-month Join Date (shorter
-        // Start-to-End range) and any LOP days deducted in calculateDays().
-        let pfDays = workedDays;
+        // Same fixed 30-day normalization as the salary rate above, so
+        // PF prorates identically no matter which calendar month it is.
+        let pfDays = normalizedWorkedDays;
         if (pfDays < 0) pfDays = 0;
-        if (pfDays > totalMonthDays) pfDays = totalMonthDays;
+        if (pfDays > STANDARD_MONTH_DAYS) pfDays = STANDARD_MONTH_DAYS;
 
-        let perDayPfEmployee = basePfEach / totalMonthDays;
+        let perDayPfEmployee = basePfEach / STANDARD_MONTH_DAYS;
 
         // Employee's PF shrinks with LOP / partial-month worked days.
         pfEmployee = perDayPfEmployee * pfDays;
