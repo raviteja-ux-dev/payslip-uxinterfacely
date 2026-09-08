@@ -46,6 +46,22 @@ body {
     font-size: 16px;
     font-weight: 500;
 }
+
+select.form-inputs {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #666 50%),
+        linear-gradient(135deg, #666 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) calc(50% - 3px),
+        calc(100% - 13px) calc(50% - 3px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
 #pan, 
 #displayPan {
     text-transform: uppercase;
@@ -79,6 +95,20 @@ body {
     justify-content: center;
     text-align: center;
 }
+
+#formToolbar {
+    max-width: calc(50% - 25px);
+    margin: 40px auto 20px auto;
+}
+
+#formToolbar .btn-primary {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    font-size: 14px;
+}
+
 
 /* Button Color Schemes & Hover Animations */
 .btn-primary { background-color: #0066cc; }
