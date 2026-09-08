@@ -129,7 +129,7 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
-        deductionsList.push({ label: "PF - Employee Fund", val: pfEmployee.toFixed(2) });
+        deductionsList.push({ label: "Provident Fund", val: pfEmployee.toFixed(2) });
     }
 
     deductionsList.push({ label: "Professional Tax", val: professionalTax.toFixed(2) });
@@ -306,7 +306,7 @@ function renderViewedSalaryTable(p) {
 
         deductionsList.push({
 
-            label: "PF - Employee Fund",
+            label: "Providednt Fund",
             val: pfEmployee.toFixed(2)
 
         });
