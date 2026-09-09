@@ -580,13 +580,6 @@ function calculateDays() {
     calculateSalary();
 }
 
-/* JOIN DATE -> START DATE RESTRICTION
-   The start date of the payable period can never fall before the
-   employee's join date (no earlier month, day, or year is allowed).
-   When Join Date changes, the Start Date field's minimum is locked
-   to that date, and if the currently selected Start Date is now
-   invalid (empty or earlier than Join Date), it is reset to the
-   Join Date itself. */
 function applyJoinDateRestriction() {
     let joinDateVal = document.getElementById("JoinDate").value;
     let startDateInput = document.getElementById("startDate");
@@ -780,8 +773,6 @@ async function generateAllPayslips() {
     }
 
     // generatePayslip() already loops over every employee in `employees`
-    // and builds `generatedPayslips` internally when employees.length > 0.
-    // Looping over it again here duplicated every database save N times
     // per employee (N^2 total writes) — so just call it once.
     await generatePayslip();
 
@@ -1130,9 +1121,6 @@ async function viewPayslip(id) {
         let pfEmployer =
             Number(p.pf_employer) || 0;
 
-        // Special Allowance carved the PF set-aside out of CTC only when
-        // PF applied to this slip (pfEmployer > 0 means it did). Variable
-        // Pay/Bonus are additions on top of CTC, so they aren't subtracted.
         let special =
             monthlyCTC - basic - hra - (pfEmployer > 0 ? pfEmployer : 0);
 
@@ -1240,21 +1228,11 @@ function calculateSalary() {
     let payableDays = getValue("DaysPayable");
     let workedDays = getValue("DaysWorked");
 
-    // LOP is always a literal number of days (never normalized) — 1 day
-    // off always costs 1 day's pay. Everything else about the period
-    // (a full month, or a partial month from a mid-month join/exit) is
-    // what gets normalized onto the fixed 30-day standard below.
     let lopDaysTaken = payableDays - workedDays;
     if (lopDaysTaken < 0) lopDaysTaken = 0;
 
     let startDate = document.getElementById("startDate").value;
 
-    // Fixed 30-day standard month: every calendar month — whether it
-    // actually has 28, 29, 30 or 31 days — is normalized onto a 30-day
-    // cycle for pay-rate purposes, so 1 LOP day costs the same amount
-    // no matter which month it falls in (Feb included). Days Payable /
-    // Days Worked shown on the form still reflect the real calendar
-    // dates entered; only the rate math below uses the normalized value.
     const STANDARD_MONTH_DAYS = 30;
 
     let normalizedWorkedDays = 0;
@@ -1300,10 +1278,6 @@ function calculateSalary() {
 
     let pfEnabled = document.getElementById("PFfield").value === "yes";
 
-    // Special Allowance is whatever's left of CTC after Basic, HRA, and
-    // the PF set-aside (only when PF applies) are carved out. Variable
-    // Pay and Bonus are additions on top of CTC, not carved out of it,
-    // so they no longer reduce Special Allowance.
     let special = monthlyCTC - basic - hra - (pfEnabled ? basePfEach : 0);
     if (special < 0) special = 0;
 
@@ -1335,9 +1309,6 @@ function calculateSalary() {
         setValue("pfEmployer", pfEmployer.toFixed(2));
     }
 
-    // Only PF Employee reduces the employee's take-home pay. Employer's
-    // share is a cost to the company (already set aside from Special
-    // Allowance above) — it is not a deduction from Net Pay.
     let professionalTax = 200;
 
     let TDS = 0;
@@ -1372,9 +1343,6 @@ function calculateSalary() {
 function numberToWords(num) {
     num = Number(num) || 0;
 
-    // Only whole Rupees are spelled out — paise are dropped (truncated,
-    // not rounded), so 423001.52 reads as "...One Rupees", not rounded
-    // up to 423002.
     let rupees = Math.floor(num + 1e-9);
 
     const ones = [
