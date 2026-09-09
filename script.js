@@ -18,17 +18,6 @@ function setValue(id, value) {
     }
 }
 
-/* ============================================================
-   AUTO-FIT LONG TEXT (Designation, Name, Location, Department,
-   and their payslip counterparts)
-   These fields sit in fixed-width boxes (the form grid, or a
-   payslip table cell). At a fixed font size, a long value can run
-   past the edge of the box and effectively be cut off from view.
-   Instead of letting that happen silently, this shrinks the field's
-   font size just enough for the whole value to stay visible, and
-   restores the normal size automatically once the text is short
-   enough to fit again.
-============================================================ */
 function autoFitInputText(el, baseSizePx) {
     if (!el) return;
 
@@ -94,6 +83,19 @@ function hide(id) {
     document.getElementById(id).style.display = "none";
 }
 
+/* Show/hide a <table> row — a plain "block" display (used by show/hide
+   above for form-control divs) would break table layout on a <tr>, so
+   these restore/clear it correctly instead. */
+function showRow(id) {
+    let el = document.getElementById(id);
+    if (el) el.style.display = "";
+}
+
+function hideRow(id) {
+    let el = document.getElementById(id);
+    if (el) el.style.display = "none";
+}
+
 /* ========================EXCEL UPLOAD VARIABLES ==================================*/
 
     let employees = [];
@@ -121,11 +123,6 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
         earningsList.push({ label: "Bonus", val: bonus.toFixed(2) });
     }
 
-    // 2. Build list of active Deductions
-    // Only PF Employee reduces the employee's Net Pay, so only that row
-    // appears under Deductions. PF Employer is a cost to the company
-    // (already set aside from Special Allowance in calculateSalary()) and
-    // is not shown as a deduction here.
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
@@ -669,10 +666,12 @@ async function generatePayslip() {
             if (document.getElementById("UAN").value === "yes") {
 
                 setValue("displayUan", getText("uanNumber"));
+                showRow("uanRow");
 
             } else {
 
                 setValue("displayUan", "");
+                hideRow("uanRow");
 
             }
             setValue("displayAnnualCTC", getText("AnnualCTC"));
@@ -748,10 +747,12 @@ async function generatePayslip() {
     if (document.getElementById("UAN").value === "yes") {
 
         setValue("displayUan", getText("uanNumber"));
+        showRow("uanRow");
 
     } else {
 
         setValue("displayUan", "");
+        hideRow("uanRow");
 
     }
     setValue("displayAnnualCTC", getText("AnnualCTC"));
@@ -1053,6 +1054,12 @@ async function viewPayslip(id) {
 
         document.getElementById("displayUan").value =
             p.uan || "";
+
+        if (p.uan) {
+            showRow("uanRow");
+        } else {
+            hideRow("uanRow");
+        }
 
         document.getElementById("joindate").value =
             formatDateDMY(p.join_date || "");
@@ -1955,6 +1962,11 @@ function showGeneratedPayslip(index) {
     document.getElementById("displayPan").value = (p.pan || "").toString().toUpperCase();
     document.getElementById("joindate").value = formatDateDMY(p.joindate);
     document.getElementById("displayUan").value = p.uan;
+    if (p.uan) {
+        showRow("uanRow");
+    } else {
+        hideRow("uanRow");
+    }
     document.getElementById("displayAnnualCTC").value = p.annualCTC;
 
     autoFitPayslipFields();

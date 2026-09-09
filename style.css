@@ -106,16 +106,16 @@ select.form-inputs {
    TDS field in the 4-column form grid above (2 of the 4 columns, minus
    the grid gap) instead of stretching the full row width. */
 #formToolbar {
-    max-width: calc(50% - 10px);
+    max-width: calc(46% - 12px);
     margin: 35px auto 20px auto;
 }
 
 #formToolbar .btn-primary {
     flex: none;
-    width: 100%;
+    width: 110%;
     min-width: 0;
     height: 40px;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 
@@ -264,7 +264,7 @@ select.form-inputs {
 
 .salary-table tfoot th {
     background: #e8e8e8;
-    text-align: center;
+    text-align: left;
 }
 
 /* Net Pay Statement */
