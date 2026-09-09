@@ -32,8 +32,8 @@ body {
 }
 
 .form-control label {
-    font-size: 14px;
-    font-weight: 400;
+    font-size: 16px;
+    font-weight: 500;
     min-height: 22px;
 }
 
@@ -43,7 +43,33 @@ body {
     padding: 10px 14px;
     border: 1px solid #999;
     border-radius: 5px;
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Selects were using the browser's native dropdown chrome, which reserves
+   extra space on the right for the arrow — pushing the selected text off
+   toward one edge instead of sitting evenly between the same 14px left/
+   right padding the text inputs use. Custom-drawn arrow keeps padding
+   symmetric on both sides. */
+select.form-inputs {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #666 50%),
+        linear-gradient(135deg, #666 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) calc(50% - 3px),
+        calc(100% - 13px) calc(50% - 3px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+#pan, 
+#displayPan {
+    text-transform: uppercase;
 }
 
 /* Single-Row Action Toolbar */
@@ -59,7 +85,7 @@ body {
 
 .action-toolbar button {
     flex: 1;
-    min-width: 170px;
+    min-width: 150px;
     height: 48px;
     font-size: 16px;
     font-weight: 600;
@@ -74,6 +100,24 @@ body {
     justify-content: center;
     text-align: center;
 }
+
+/* Generate Payslips button: smaller than the other toolbars, and its
+   width is scaled to roughly match the span from the UAN field to the
+   TDS field in the 4-column form grid above (2 of the 4 columns, minus
+   the grid gap) instead of stretching the full row width. */
+#formToolbar {
+    max-width: calc(46% - 12px);
+    margin: 35px auto 20px auto;
+}
+
+#formToolbar .btn-primary {
+    flex: none;
+    width: 110%;
+    min-width: 0;
+    height: 40px;
+    font-size: 16px;
+}
+
 
 /* Button Color Schemes & Hover Animations */
 .btn-primary { background-color: #0066cc; }
@@ -91,7 +135,7 @@ body {
 .btn-excel { background-color: #28a745; }
 .btn-excel:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(40, 167, 69, 0.25); }
 
-.btn-clear { background-color: #dc3545; }
+.btn-clear { background-color: maroon; }
 .btn-clear:hover { background-color: #c82333; transform: translateY(-2px); box-shadow: 0 5px 10px rgba(220, 53, 69, 0.25); }
 
 /* Pay Slip Layout */
@@ -139,8 +183,16 @@ body {
     padding: 12px;
     border: 1.5px solid #000;
     font-size: 16px;
-    text-align: justify;
     font-weight: bold;
+}
+
+.emp-table th {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.emp-table td {
+    text-align: justify;
 }
 
 .emp-table td input {
@@ -193,13 +245,26 @@ body {
     background: transparent;
     box-shadow: none;
     text-align: center;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: bold;
+}
+
+#joindate,
+.salary-table td input {
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    font-feature-settings: normal !important;
+    font-variant-numeric: normal !important;
+    letter-spacing: 0 !important;
+    color: #000 !important;
 }
 
 .salary-table tfoot th {
     background: #e8e8e8;
-    text-align: center;
+    text-align: left;
 }
 
 /* Net Pay Statement */
@@ -385,4 +450,17 @@ body {
 @media screen and (max-width: 600px) {
     .action-toolbar { flex-direction: column; }
     .action-toolbar button { width: 100%; flex: 1 1 100%; }
+}
+
+/* Hide up/down arrow spinners for Chrome, Safari, Edge, and Opera */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide up/down arrow spinners for Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }

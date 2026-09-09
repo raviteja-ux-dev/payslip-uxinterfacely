@@ -4,6 +4,10 @@ const multer = require("multer");
 require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
+const muhammara = require("muhammara");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
 
 const app = express();
 const upload = multer({
@@ -23,18 +27,54 @@ const supabase = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 
-// =======================================
-// Test Route
-// =======================================
+// ============ Generate password from name + associate ID ==============
+
+function generatePayslipPassword(employeeName, associateId) {
+
+    const namePart = employeeName
+        .replace(/\s+/g, "")
+        .substring(0, 4)
+        .toUpperCase();
+
+    return `${namePart}${associateId}`;
+
+}
+
+
+// ============ Password-protect a PDF buffer ==============
+
+function protectPdfBuffer(buffer, password) {
+
+    const tmpDir = os.tmpdir();
+    const inputPath = path.join(tmpDir, `payslip-in-${Date.now()}.pdf`);
+    const outputPath = path.join(tmpDir, `payslip-out-${Date.now()}.pdf`);
+
+    fs.writeFileSync(inputPath, buffer);
+
+    muhammara.recrypt(inputPath, outputPath, {
+        userPassword: password,
+        ownerPassword: password,
+        userProtectionFlag: 4
+    });
+
+    const protectedBuffer = fs.readFileSync(outputPath);
+
+    fs.unlinkSync(inputPath);
+    fs.unlinkSync(outputPath);
+
+    return protectedBuffer;
+
+}
+
+
+// ================== Test Route =====================
 
 app.get("/", (req, res) => {
     res.send("Payslip API Running...");
 });
 
 
-// =======================================
-// Test Employees
-// =======================================
+// ================== Test Employees =====================
 
 app.get("/test", async (req, res) => {
 
@@ -50,11 +90,8 @@ app.get("/test", async (req, res) => {
 });
 
 
-// =======================================
-// Employee Master
-// Insert if new
-// Update if Associate ID already exists
-// =======================================
+// ================= Employee Master ======================
+// Insert if new Update if Associate ID already exists
 
 app.post("/employee", async (req, res) => {
 
@@ -95,10 +132,7 @@ app.post("/employee", async (req, res) => {
 });
 
 
-// =======================================
-// Payslip
-// One Payslip per Month per Employee
-// =======================================
+// ================ One Payslip per Month per Employee =======================
 
 app.post("/payslip", async (req, res) => {
 
@@ -218,9 +252,7 @@ app.get("/payslips/:associateId", async (req, res) => {
 });
 
 
-// =======================================
-// View Employees
-// =======================================
+// ================== View Employees =====================
 
 app.get("/employees", async (req, res) => {
 
@@ -243,9 +275,7 @@ app.get("/payslip/:id", async (req, res) => {
 
     try {
 
-        // -------------------------
-        // Get Payslip
-        // -------------------------
+        // ------------ Get Payslip -------------
 
         const { data: payslip, error: payslipError } =
             await supabase
@@ -258,9 +288,7 @@ app.get("/payslip/:id", async (req, res) => {
             return res.status(500).json(payslipError);
         }
 
-        // -------------------------
-        // Get Employee
-        // -------------------------
+        // ------------- Get Employee ------------
 
         const { data: employee, error: employeeError } =
             await supabase
@@ -273,9 +301,7 @@ app.get("/payslip/:id", async (req, res) => {
             return res.status(500).json(employeeError);
         }
 
-        // -------------------------
-        // Merge both objects
-        // -------------------------
+        // ------------- Merge both objects ------------
 
         const result = {
             ...employee,
@@ -307,18 +333,17 @@ app.post(
 
         try {
 
-            const employeeEmail =
-                req.body.employeeEmail;
+            const employeeEmail = req.body.employeeEmail;
+                
+            const employeeName = req.body.employeeName || "Employee";
+                
+            const associateId = req.body.associateId;
+                
+            const payMonthYear = req.body.payMonthYear || "this month";
 
-            const employeeName =
-                req.body.employeeName || "Employee";
+            const pdfFile = req.file;
 
-            const pdfFile =
-                req.file;
-
-            // ==========================
-            // Validate email
-            // ==========================
+            // ============ Validate email ==============
 
             if (!employeeEmail) {
 
@@ -329,9 +354,8 @@ app.post(
 
             }
 
-            // ==========================
-            // Validate PDF
-            // ==========================
+
+            // =========== Validate PDF ===============
 
             if (!pdfFile) {
 
@@ -341,6 +365,19 @@ app.post(
                 });
 
             }
+
+
+            // =========== Validate associate ID ===============
+
+            if (!associateId) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Associate ID is required"
+                });
+
+            }
+
 
             console.log(
                 "Sending payslip to:",
@@ -353,51 +390,101 @@ app.post(
                 "bytes"
             );
 
-            // ==========================
-            // Send Email using Resend
-            // ==========================
+
+            // ============ Password-protect the PDF ==============
+
+            const payslipPassword =
+                generatePayslipPassword(employeeName, associateId);
+
+            const protectedPdfBuffer =
+                protectPdfBuffer(pdfFile.buffer, payslipPassword);
+
+
+            // ============ Send Email using Resend ==============
 
             const emailResult =
                 await resend.emails.send({
 
                     from:
-                        "Payslip <onboarding@resend.dev>",
+                        process.env.RESEND_FROM_EMAIL,
 
                     to: [employeeEmail],
 
-                    subject:
-                        `Payslip - ${employeeName}`,
+                    subject: `Payslip - ${employeeName} - ${payMonthYear}`,
 
-                    html: `
-                        <p>Dear ${employeeName},</p>
-
-                        <p>
-                            Please find your payslip
-                            attached with this email.
-                        </p>
-
-                        <p>
-                            Regards,<br>
-                            Payroll Team
-                        </p>
+                        html: `
+                            <div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.5; font-size: 14px; text-align: left;">
+                            <p style="margin-bottom: 15px;">Dear ${employeeName},</p>
+                            
+                            <p style="margin-bottom: 15px;">Greetings from UXINTERFACELY IT SOLUTIONS LLP</p>
+                            
+                            <p style="margin-bottom: 15px;">Please find attached your salary payslip for ${payMonthYear} for your reference and records.</p>
+                            
+                            <p style="margin-bottom: 15px;">
+                                <strong>Payslip Password Format</strong><br>
+                                The attached PDF is password protected. To open the payslip, please use:<br>
+                                First 4 letters of your name in CAPITAL letters + Associate ID
+                            </p>
+                            
+                            <p style="margin-bottom: 15px;">
+                                Example:<br>
+                                Name: Apple<br>
+                                Associate ID: UX1234<br>
+                                Password: APPLUX1234
+                            </p>
+                            
+                            <p style="margin-bottom: 15px;">
+                                If you do not know your Associate ID, please contact your respective contact person to obtain the details.<br>
+                                If you face any issues accessing your payslip, please reach out to the Team for assistance.
+                            </p>
+                            
+                            <p style="margin-bottom: 0;">Best Regards,</p>
+                            <table style="border: 1px solid #cccccc; border-collapse: collapse; width: 100%; max-width: 600px;  margin-top: 25px; font-family: Arial, sans-serif; font-size: 14px; color: #000000;">
+                                <tr>
+                                    <td style="border-right: 1px solid #cccccc; padding: 20px; width: 40%; text-align: center; vertical-align: middle;">
+                                        <img src="${process.env.COMPANY_LOGO_URL}" alt="UXInterfacely Logo" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+                                    </td>
+                                    <td style="padding: 20px; width: 60%; vertical-align: middle; line-height: 1.8;">
+                                        <p style="margin: 0 0 10px 0; font-size: 15px;">Gopisetti Haripriya</p>
+                                        <p style="margin: 0 0 10px 0;">Human Resources at UXINTERFACELY IT SOLUTIONS</p>
+                                        <p style="margin: 0 0 10px 0;">
+                                            <a href="https://www.uxinterfacely.com" style="color: #0000ee; text-decoration: underline;">www.uxinterfacely.com</a>
+                                        </p>
+                                        <p style="margin: 0 0 10px 0;"><strong>UXINTERFACELY IT SOLUTIONS LLP</strong></p>
+                                        <p style="margin: 0;">
+                                            <a href="mailto:hr@uxinterfacely.com" style="color: #0000ee; text-decoration: underline;">hr@uxinterfacely.com</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
                     `,
 
+
+                    // ============ PDF Attachment ============
+
                     attachments: [
+
                         {
                             filename:
                                 `${employeeName}_Payslip.pdf`,
 
                             content:
-                                pdfFile.buffer
+                                protectedPdfBuffer
                         }
+
                     ]
 
                 });
+
 
             console.log(
                 "Resend result:",
                 emailResult
             );
+
+
+            // ============ Resend Error ============
 
             if (emailResult.error) {
 
@@ -407,13 +494,17 @@ app.post(
                 );
 
                 return res.status(500).json({
+
                     success: false,
+
                     message:
                         emailResult.error.message ||
                         "Failed to send email"
+
                 });
 
             }
+
 
             // ==========================
             // Success
@@ -426,11 +517,18 @@ app.post(
                 message:
                     "Payslip email sent successfully",
 
-                data: emailResult.data
+                data:
+                    emailResult.data
 
             });
 
         }
+
+
+        // ==========================
+        // Catch Error
+        // ==========================
+
         catch (err) {
 
             console.error(

@@ -13,62 +13,65 @@
           <h4> CTC Payslip Generator</h4>
         </div>
         <div id="formCreation" class="form-creation">
-         <div class="form-control">
+          <div class="form-control">
             <label for="name">Name</label>
-            <input class="form-inputs" type="text" name="Name" id="name" value="">
+            <input class="form-inputs" type="text" name="Name" id="name" value="" required oninput="this.value = this.value.replace(/[^a-zA-Z\s\$]/g, '').replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });" title="Please enter a valid name">
          </div>
 
-          <!-- Start date field-->
+        <!-- Start date field-->
          <div class="form-control">
             <label for="StartDate">Start Date</label>
-            <input class="form-inputs" type="date" id="startDate" name="StartDate" onchange="calculateDays()">
+            <input class="form-inputs" type="date" id="startDate" name="StartDate" required onchange="document.getElementById('endDate').min = this.value; calculateDays()">
          </div>
 
-          <!--end date field-->         
+        <!--end date field-->         
           <div class="form-control">
             <label for="enddate">End Date</label>
-            <input class="form-inputs" type="date" id="endDate" name="EndDate" onchange="calculateDays()">
-         </div>              
+            <input class="form-inputs" type="date" id="endDate" name="EndDate" required onchange="calculateDays()">
+         </div>             
 
-          <!--Designation field--> 
+        <!--Designation field--> 
           <div class="form-control">
             <label for="Designation">Designation</label>
-            <input class="form-inputs" type="text" id="Designation" value="" name="Designation">
-         </div>   
+            <input class="form-inputs" type="text" id="Designation" value="" name="Designation" required oninput="this.value = this.value.replace(/[^\x20-\x7E]/g, '').replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });">
+         </div> 
          
-          <!-- Email field --> 
+        <!-- Email field --> 
           <div class="form-control">
             <label for="email">Employee Email</label>
-            <input type="email" id="email" name="Email" class="form-inputs" placeholder="employee@example.com">
+            <input type="email" id="email" name="Email" class="form-inputs" placeholder="employee@example.com" required oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9@._+-]/g, '')">
           </div>
 
-          <!--Annual Ctc field-->      
+        <!--Annual Ctc field-->      
           <div class="form-control">
             <label for="AnnualCTC">Annual CTC</label>
-            <input class="form-inputs" type="text" id="AnnualCTC" value="" name="AnnualCTC">
+            <input class="form-inputs" type="number" id="AnnualCTC" value="" name="AnnualCTC" step="0.01" min="0" required  title="Please enter a valid numeric amount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1')">
          </div>         
         
-          <!--employee-id field-->  
+        <!--employee-id field-->  
           <div class="form-control">
-            <label for="AssociateID">Associate ID</label>
-            <input class="form-inputs" type="text" id="AssociateID" value="" name="AssociateID">
-         </div>         
+            <label for="AssociateID">Employee ID</label>
+            <input class="form-inputs" type="text" id="AssociateID" value="" name="AssociateID" required oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
+         </div>        
         
-          <!--join date field-->
+        <!--join date field-->
           <div class="form-control">
             <label for="JoinDate">Join Date</label>
-            <input class="form-inputs" type="date" id="JoinDate" value="" name="JoinDate">
+            <input class="form-inputs" type="date" id="JoinDate" value="" name="JoinDate" required>
           </div> 
-          <!-- location field -->
+                  
+        <!-- location field -->
           <div class="form-control">
             <label for="location">Location</label>
-            <input class="form-inputs" type="text" id="location" value="" name="location">
+            <input class="form-inputs" type="text" id="location" value="" name="location" required 
+            oninput="this.value = this.value.replace(/[^\x20-\x7E]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
           </div>     
          
-          <!-- department field -->
+        <!-- department field -->
           <div class="form-control">
             <label for="Department">Department</label>
-            <input class="form-inputs" type="text" id="Department" value="" name="Department">
+            <input class="form-inputs" type="text" id="Department" value="" name="Department" required 
+            oninput="this.value = this.value.replace(/[^\x20-\x7E]/g, ''); if(this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);">
          </div>
 
           <!-- payable days field -->
@@ -83,10 +86,10 @@
             <input class="form-inputs" type="number" id="DaysWorked" readonly>
          </div>  
 
-          <!-- lop field --> 
+        <!-- lop field --> 
           <div class="form-control">
             <label for="Lopdays">LOP Days</label>
-            <select id="lopdays" class="form-inputs" onchange="toggleLop()">
+            <select id="lopdays" class="form-inputs" onchange="toggleLop()" >
               <option value="">Select</option>  
               <option value="yes">Yes</option>
               <option value="no">No</option>
@@ -95,13 +98,13 @@
 
           <div class="form-control" id="Loppaydbox" style="display: none;">
               <label for="loppayfield">Lop Days </label>
-              <input type="number" id="LopPayField" class="form-inputs" name="Lopdaysfield" oninput="updatelop()">               
+              <input type="text" inputmode="decimal" id="LopPayField" class="form-inputs" name="Lopdaysfield" oninput="sanitizeLopInput(this)">               
           </div>
 
           <!-- pan field -->
           <div class="form-control">
             <label for="pan">PAN</label>
-            <input class="form-inputs" type="text" id="pan" value="" name="pan">
+            <input class="form-inputs" type="text" id="pan" value="" name="pan" required maxlength="10" pattern="^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$" title="PAN must be exactly 10 characters (e.g., ABCDE1234F)" style="text-transform: uppercase;" oninput="this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
          </div> 
 
           <!-- variable field -->
@@ -116,7 +119,7 @@
 
           <div class="form-control" id="variablePayAmount" style="display: none;">
               <label for="variableAmount">Variable Pay Amount</label>
-              <input type="number" id="variableAmount" class="form-inputs" name="variablepayamount" oninput="updateVariablePay()">               
+              <input type="number" id="variableAmount" class="form-inputs" name="variablepayamount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updateVariablePay()">              
           </div>
 
           <!-- Bonus field -->
@@ -131,7 +134,7 @@
 
           <div class="form-control" id="BonusAmountBox" style="display:none;">
             <label for="BonusAmount">Bonus Amount</label>
-            <input type="number" id="BonusAmount" class="form-inputs" name="bonusamount" oninput="updateBonus()">
+            <input type="number" id="BonusAmount" class="form-inputs" name="bonusamount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updateBonus()">
           </div>
 
           <!-- PF Field -->
@@ -146,15 +149,15 @@
 
            <div class="form-control" id="PFamountBox" style="display:none;">
               <label>Employee Fund</label>
-              <input class="form-inputs" type="number" id="pfEmployee" oninput="updatePF()">
+              <input class="form-inputs" type="number" id="pfEmployee" readonly>
               <label>Employer Fund</label>
-              <input class="form-inputs" type="number" id="pfEmployer" oninput="updatePF()">
+              <input class="form-inputs" type="number" id="pfEmployer" readonly>
             </div>
           
           <!-- UAN field -->
           <div class="form-control">
               <label for="UAN">UAN</label>
-              <select class="form-inputs" id="UAN" onchange="toggleUan()">
+              <select class="form-inputs" id="UAN" onchange="toggleUan()" required>
                   <option value="">Select</option>
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
@@ -163,14 +166,9 @@
 
           <!-- Hidden UAN Number -->
           <div class="form-control" id="uanNumberBox" style="display:none;">
-              <label for="uanNumber">UAN Number</label>
-              <input type="number" id="uanNumber" class="form-inputs">
-          </div>
-
-          <!-- gst field -->
-          <div class="form-control">
-            <label for="gst">GST</label>
-            <input class="form-inputs" id="gst" type="text" value="36AAIFU2638L1ZQ">
+            <label for="uanNumber">UAN Number</label>
+            <input type="text" id="uanNumber" class="form-inputs" minlength="12" maxlength="12" pattern="[0-9]{12}"
+            oninput="validateUan(this)" title="UAN must be exactly 12 digits and cannot contain sequential numbers.">
           </div>
 
           <!-- TDS Field -->
@@ -186,7 +184,25 @@
           <!--hidden TDS field -->
           <div class="form-control" id="tdsAmountBox" style="display:none;">        
               <label>TDS Amount</label>-
-              <input id="tdsAmount" class="form-inputs"> 
+              <input id="tdsAmount" type="number" class="form-inputs"
+              oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); calculateSalary()"> 
+          </div>
+
+          <!-- Food Coupon Field -->
+          <div class="form-control">
+            <label for="foodCoupon">Food Coupon</label>
+            <select id="foodCoupon" class="form-inputs" onchange="toggleFoodCoupon()">
+              <option value="">Select</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+
+          <!--hidden Food Coupon field -->
+          <div class="form-control" id="foodCouponAmountBox" style="display:none;">
+              <label for="foodCouponAmount">Food Coupon Amount</label>
+              <input id="foodCouponAmount" type="number" class="form-inputs"
+              oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); calculateSalary()">
           </div>
         </div>
 
@@ -239,9 +255,10 @@
             <td>
               <input type="text" id="empid" readonly>
             </td>
+
             <th>Name</th>
             <td>
-              <input type="text" id="empname" readonly>
+              <span id="empname" style="font-size: 16px; font-weight: bold; font-family: Arial, sans-serif;"></span>
             </td>
           </tr>
 
@@ -257,20 +274,20 @@
           <tr>
             <th>PAN</th>
             <td>
-              <input type="text" id="displayPan" readonly>
+              <input type="text"   id="displayPan" readonly style= "text-transform: uppercase;">
             </td>
             <th>Date Of Joining</th>
               <td>
-                <input type="date" id="joindate" readonly>
+                <input type="text" id="joindate" readonly>
               </td>            
           </tr>
-          <tr>
+          <tr id="uanRow">
             <th>UAN</th>
-            <td>
+            <td >
               <input type="text" id="displayUan" readonly>
-            </td>    
-            <th> GST NO:</th>
-            <td> 36AAIFU2638L1ZQ</td>
+            </td>
+            <th></th>
+            <td></td>           
           </tr>
         </table>
         </div>
@@ -300,8 +317,9 @@
 
         <!-- Net Pay Statement -->
         <div class="net-pay-statement">
-          Net Pay of Rs. <span id="netpay">0.00</span> ( Rupees <span id="amountWords">Zero</span> Only ) Credited into your bank account.
+          Net Pay of Rs. <span id="netpay">0.00</span> ( <span id="amountWords">Zero</span> Only ) Credited into your bank account.
         </div>
+
         <div class="payslip-footer">
           <hr>
           <p>This is a computer generated payslip.</p>
@@ -312,6 +330,8 @@
         <button type="button" class="btn-print" onclick="printPayslip()"> Print Payslip </button>
         <button type="button" class="btn-email" onclick="sendPayslipEmail()">Send Payslip</button>
         <button type="button" class="btn-excel" onclick="addCurrentRowToExcel()"> Add Current Row </button>
+        <br>
+        <button type="button" class="btn-excel" style="background-color: #0284c7;" onclick="downloadAccumulatedExcel()"> Download Excel </button>
         <button type="button" class="btn-clear" onclick="clearExcelRows()"> Clear Stored Rows </button>
       </div>
 
