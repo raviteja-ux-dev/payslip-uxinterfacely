@@ -123,6 +123,11 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
         earningsList.push({ label: "Bonus", val: bonus.toFixed(2) });
     }
 
+    // 2. Build list of active Deductions
+    // Only PF Employee reduces the employee's Net Pay, so only that row
+    // appears under Deductions. PF Employer is a cost to the company
+    // (already set aside from Special Allowance in calculateSalary()) and
+    // is not shown as a deduction here.
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
@@ -706,6 +711,8 @@ async function generatePayslip() {
 
             });
 
+            addCurrentRowToExcel(true);
+
         }
 
         generatedMode = true;
@@ -772,8 +779,6 @@ async function generateAllPayslips() {
         return;
     }
 
-    // generatePayslip() already loops over every employee in `employees`
-    // per employee (N^2 total writes) — so just call it once.
     await generatePayslip();
 
     alert("All payslips generated successfully.");
@@ -1121,6 +1126,9 @@ async function viewPayslip(id) {
         let pfEmployer =
             Number(p.pf_employer) || 0;
 
+        // Special Allowance carved the PF set-aside out of CTC only when
+        // PF applied to this slip (pfEmployer > 0 means it did). Variable
+        // Pay/Bonus are additions on top of CTC, so they aren't subtracted.
         let special =
             monthlyCTC - basic - hra - (pfEmployer > 0 ? pfEmployer : 0);
 
@@ -1241,9 +1249,6 @@ function calculateSalary() {
         let date = new Date(startDate);
         let actualMonthDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
-        // Scale actual days payable onto the 30-day standard — a full
-        // calendar month, whatever its real length, always normalizes
-        // to exactly 30 here — then subtract LOP as literal days.
         let normalizedPayableDays = payableDays * (STANDARD_MONTH_DAYS / actualMonthDays);
         normalizedWorkedDays = normalizedPayableDays - lopDaysTaken;
 
@@ -1266,13 +1271,7 @@ function calculateSalary() {
         bonus = getValue("BonusAmount");
     }
 
-    /* ============================= PROVIDENT FUND (PF) TIER ===============================
-       PF is 12% of Basic, capped at Rs. 1800 (the statutory wage-ceiling
-       equivalent of 12% of Rs. 15,000). The tier is decided off the FULL
-       (unprorated) monthly Basic so a mid-month join/LOP never pushes
-       someone across the threshold. This same amount is what Special
-       Allowance sets aside for PF below — whether or not PF is actually
-       enabled for this slip. */
+
     let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
     let basePfEach = (fullMonthlyBasic > 15000) ? 1800 : (fullMonthlyBasic * 0.12);
 
@@ -1309,6 +1308,9 @@ function calculateSalary() {
         setValue("pfEmployer", pfEmployer.toFixed(2));
     }
 
+    // Only PF Employee reduces the employee's take-home pay. Employer's
+    // share is a cost to the company (already set aside from Special
+    // Allowance above) — it is not a deduction from Net Pay.
     let professionalTax = 200;
 
     let TDS = 0;
@@ -1426,22 +1428,24 @@ async function printPayslip() {
 /* EXPORT / ADD CURRENT ROW TO EXCEL */
 let accumulatedPayslips = JSON.parse(localStorage.getItem("accumulatedPayslips") || "[]");
 
-function addCurrentRowToExcel() {
+function addCurrentRowToExcel(silent) {
     let rawName = getText("name") || "Employee";
 
+    let associateId = getText("AssociateID");
     let startDateVal = document.getElementById("startDate").value;
 
     let currentRowData = {
-        "S.No": accumulatedPayslips.length + 1,
-        "Associate ID": getText("AssociateID"),
+        "S.No": 0,
+        "Associate ID": associateId,
         "Employee Name": rawName,
         "Designation": getText("Designation"),
         "Department": getText("Department"),
         "Location": getText("location"),
         "PAN": getText("pan").toUpperCase(),
         "UAN": document.getElementById("UAN").value === "yes" ? getText("uanNumber") : "N/A",
-        "Start Date": startDateVal,
-        "End Date": document.getElementById("endDate").value,
+        "Join Date": formatDateLong(document.getElementById("JoinDate").value),
+        "Start Date": formatDateLong(startDateVal),
+        "End Date": formatDateLong(document.getElementById("endDate").value),
         "Days Payable": getValue("DaysPayable"),
         "Days Worked": getValue("DaysWorked"),
         "Annual CTC": getValue("AnnualCTC"),
@@ -1450,10 +1454,31 @@ function addCurrentRowToExcel() {
         "Net Pay": document.getElementById("netpay").innerText
     };
 
-    accumulatedPayslips.push(currentRowData);
+    // generated/added — update that row in place instead of appending
+    // a duplicate.
+    let existingIndex = accumulatedPayslips.findIndex(
+        (row) => row["Associate ID"] === associateId && row["Start Date"] === currentRowData["Start Date"]
+    );
+
+    let wasUpdate = existingIndex !== -1;
+
+    if (wasUpdate) {
+        currentRowData["S.No"] = accumulatedPayslips[existingIndex]["S.No"];
+        accumulatedPayslips[existingIndex] = currentRowData;
+    } else {
+        currentRowData["S.No"] = accumulatedPayslips.length + 1;
+        accumulatedPayslips.push(currentRowData);
+    }
+
     localStorage.setItem("accumulatedPayslips", JSON.stringify(accumulatedPayslips));
 
-    alert(`Row #${accumulatedPayslips.length} added to export queue! (Click 'Download Excel' to save)`);
+    if (!silent) {
+        alert(
+            wasUpdate
+                ? `Row for ${associateId} updated in export queue! (Click 'Download Excel' to save)`
+                : `Row #${accumulatedPayslips.length} added to export queue! (Click 'Download Excel' to save)`
+        );
+    }
 }
 
 function downloadAccumulatedExcel() {
@@ -2213,6 +2238,36 @@ function formatDateDMY(dateString) {
     let day = String(date.getDate()).padStart(2, '0');
     let month = String(date.getMonth() + 1).padStart(2, '0');
     let year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
+// Formats a date as "08-September-2026" (DD-MonthName-YYYY) for the
+// accumulated Excel export.
+function formatDateLong(dateString) {
+    if (!dateString) return "";
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    let date;
+
+    // "YYYY-MM-DD" (from a <input type="date">) — parse manually so it
+    // isn't shifted by timezone interpretation.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        let [y, m, d] = dateString.split("-").map(Number);
+        date = new Date(y, m - 1, d);
+    } else {
+        date = new Date(dateString);
+    }
+
+    if (isNaN(date.getTime())) return dateString;
+
+    let day = String(date.getDate()).padStart(2, '0');
+    let month = monthNames[date.getMonth()];
+    let year = date.getFullYear();
+
     return `${day}-${month}-${year}`;
 }
 
