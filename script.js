@@ -18,6 +18,17 @@ function setValue(id, value) {
     }
 }
 
+/* ============================================================
+   AUTO-FIT LONG TEXT (Designation, Name, Location, Department,
+   and their payslip counterparts)
+   These fields sit in fixed-width boxes (the form grid, or a
+   payslip table cell). At a fixed font size, a long value can run
+   past the edge of the box and effectively be cut off from view.
+   Instead of letting that happen silently, this shrinks the field's
+   font size just enough for the whole value to stay visible, and
+   restores the normal size automatically once the text is short
+   enough to fit again.
+============================================================ */
 function autoFitInputText(el, baseSizePx) {
     if (!el) return;
 
@@ -585,6 +596,13 @@ function calculateDays() {
     calculateSalary();
 }
 
+/* JOIN DATE -> START DATE RESTRICTION
+   The start date of the payable period can never fall before the
+   employee's join date (no earlier month, day, or year is allowed).
+   When Join Date changes, the Start Date field's minimum is locked
+   to that date, and if the currently selected Start Date is now
+   invalid (empty or earlier than Join Date), it is reset to the
+   Join Date itself. */
 function applyJoinDateRestriction() {
     let joinDateVal = document.getElementById("JoinDate").value;
     let startDateInput = document.getElementById("startDate");
@@ -711,8 +729,6 @@ async function generatePayslip() {
 
             });
 
-            addCurrentRowToExcel(true);
-
         }
 
         generatedMode = true;
@@ -779,6 +795,10 @@ async function generateAllPayslips() {
         return;
     }
 
+    // generatePayslip() already loops over every employee in `employees`
+    // and builds `generatedPayslips` internally when employees.length > 0.
+    // Looping over it again here duplicated every database save N times
+    // per employee (N^2 total writes) — so just call it once.
     await generatePayslip();
 
     alert("All payslips generated successfully.");
@@ -1236,11 +1256,21 @@ function calculateSalary() {
     let payableDays = getValue("DaysPayable");
     let workedDays = getValue("DaysWorked");
 
+    // LOP is always a literal number of days (never normalized) — 1 day
+    // off always costs 1 day's pay. Everything else about the period
+    // (a full month, or a partial month from a mid-month join/exit) is
+    // what gets normalized onto the fixed 30-day standard below.
     let lopDaysTaken = payableDays - workedDays;
     if (lopDaysTaken < 0) lopDaysTaken = 0;
 
     let startDate = document.getElementById("startDate").value;
 
+    // Fixed 30-day standard month: every calendar month — whether it
+    // actually has 28, 29, 30 or 31 days — is normalized onto a 30-day
+    // cycle for pay-rate purposes, so 1 LOP day costs the same amount
+    // no matter which month it falls in (Feb included). Days Payable /
+    // Days Worked shown on the form still reflect the real calendar
+    // dates entered; only the rate math below uses the normalized value.
     const STANDARD_MONTH_DAYS = 30;
 
     let normalizedWorkedDays = 0;
@@ -1249,6 +1279,9 @@ function calculateSalary() {
         let date = new Date(startDate);
         let actualMonthDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
+        // Scale actual days payable onto the 30-day standard — a full
+        // calendar month, whatever its real length, always normalizes
+        // to exactly 30 here — then subtract LOP as literal days.
         let normalizedPayableDays = payableDays * (STANDARD_MONTH_DAYS / actualMonthDays);
         normalizedWorkedDays = normalizedPayableDays - lopDaysTaken;
 
@@ -1271,12 +1304,22 @@ function calculateSalary() {
         bonus = getValue("BonusAmount");
     }
 
-
+    /* ============================= PROVIDENT FUND (PF) TIER ===============================
+       PF is 12% of Basic, capped at Rs. 1800 (the statutory wage-ceiling
+       equivalent of 12% of Rs. 15,000). The tier is decided off the FULL
+       (unprorated) monthly Basic so a mid-month join/LOP never pushes
+       someone across the threshold. This same amount is what Special
+       Allowance sets aside for PF below — whether or not PF is actually
+       enabled for this slip. */
     let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
     let basePfEach = (fullMonthlyBasic > 15000) ? 1800 : (fullMonthlyBasic * 0.12);
 
     let pfEnabled = document.getElementById("PFfield").value === "yes";
 
+    // Special Allowance is whatever's left of CTC after Basic, HRA, and
+    // the PF set-aside (only when PF applies) are carved out. Variable
+    // Pay and Bonus are additions on top of CTC, not carved out of it,
+    // so they no longer reduce Special Allowance.
     let special = monthlyCTC - basic - hra - (pfEnabled ? basePfEach : 0);
     if (special < 0) special = 0;
 
@@ -1345,6 +1388,9 @@ function calculateSalary() {
 function numberToWords(num) {
     num = Number(num) || 0;
 
+    // Only whole Rupees are spelled out — paise are dropped (truncated,
+    // not rounded), so 423001.52 reads as "...One Rupees", not rounded
+    // up to 423002.
     let rupees = Math.floor(num + 1e-9);
 
     const ones = [
@@ -1454,6 +1500,10 @@ function addCurrentRowToExcel(silent) {
         "Net Pay": document.getElementById("netpay").innerText
     };
 
+    // A payslip is uniquely identified by Associate ID + Start Date (the
+    // same employee can have a separate row per pay period). If a row
+    // for this exact payslip already exists in the queue — e.g. the
+    // employee's form-inputs were edited after the payslip was
     // generated/added — update that row in place instead of appending
     // a duplicate.
     let existingIndex = accumulatedPayslips.findIndex(
