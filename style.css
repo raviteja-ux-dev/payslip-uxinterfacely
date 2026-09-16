@@ -192,7 +192,7 @@ select.form-inputs {
 }
 
 .emp-table td {
-    text-align: justify;
+    text-align: left;
 }
 
 .emp-table td input {
