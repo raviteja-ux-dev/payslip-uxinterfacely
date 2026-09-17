@@ -21,13 +21,6 @@ function setValue(id, value) {
 /* ============================================================
    AUTO-FIT LONG TEXT (Designation, Name, Location, Department,
    and their payslip counterparts)
-   These fields sit in fixed-width boxes (the form grid, or a
-   payslip table cell). At a fixed font size, a long value can run
-   past the edge of the box and effectively be cut off from view.
-   Instead of letting that happen silently, this shrinks the field's
-   font size just enough for the whole value to stay visible, and
-   restores the normal size automatically once the text is short
-   enough to fit again.
 ============================================================ */
 function autoFitInputText(el, baseSizePx) {
     if (!el) return;
@@ -181,9 +174,7 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
 }
 function renderViewedSalaryTable(p) {
 
-    // =========================
-    // Calculate salary values
-    // =========================
+    // ============ Calculate salary values =============
 
     const annualCTC = Number(p.annual_ctc) || 0;
 
@@ -215,9 +206,7 @@ function renderViewedSalaryTable(p) {
 
     }
 
-    // =========================
-    // Earnings
-    // =========================
+    // =========== Earnings ==============
 
     const variable =
         Number(p.variable_pay) || 0;
@@ -231,9 +220,6 @@ function renderViewedSalaryTable(p) {
     const hra =
         basic * 0.40;
 
-    // =========================
-    // PF
-    // =========================
     // Only PF Employee reduces Net Pay. PF Employer is a cost to the
     // company (set aside from Special Allowance below, not a deduction).
 
@@ -253,29 +239,21 @@ function renderViewedSalaryTable(p) {
         special = 0;
     }
 
-    // =========================
-    // TDS
-    // =========================
+    // ============ TDS =============
 
     const tds =
         Number(p.tds) || 0;
 
-    // =========================
-    // Food Coupon
-    // =========================
+    // ============ Food Coupon =============
 
     const foodCoupon =
         Number(p.food_coupon) || 0;
 
-    // =========================
-    // Professional Tax
-    // =========================
+    // ============ Professional Tax =============
 
     const professionalTax = 200;
 
-    // =========================
-    // Earnings List
-    // =========================
+    // ============ Earnings List =============
 
     let earningsList = [
 
@@ -369,9 +347,7 @@ function renderViewedSalaryTable(p) {
 
     }
 
-    // =========================
-    // Render Table
-    // =========================
+    // ============ Render Table =============
 
     const tbody =
         document.getElementById("salaryTableBody");
@@ -598,11 +574,8 @@ function calculateDays() {
 
 /* JOIN DATE -> START DATE RESTRICTION
    The start date of the payable period can never fall before the
-   employee's join date (no earlier month, day, or year is allowed).
-   When Join Date changes, the Start Date field's minimum is locked
-   to that date, and if the currently selected Start Date is now
-   invalid (empty or earlier than Join Date), it is reset to the
-   Join Date itself. */
+   employee's join date (no earlier month, day, or year is allowed).. */
+
 function applyJoinDateRestriction() {
     let joinDateVal = document.getElementById("JoinDate").value;
     let startDateInput = document.getElementById("startDate");
@@ -920,9 +893,7 @@ async function saveEmployeeToDatabase() {
         console.log("Saving Payslip...");
         console.log(payslip);
 
-        // ==========================
-        // Save Payslip
-        // ==========================
+        // ============= Save Payslip =============
 
         const payslipResponse = await fetch(
             "https://payslip-uxinterfacely.onrender.com/payslip",
@@ -1210,12 +1181,10 @@ async function viewPayslip(id) {
 
 
         // ==================== NET PAY ======================
+        // Whole Rupees only — paise dropped, not rounded up.
 
         document.getElementById("netpay").innerText =
-            Number(p.net_salary).toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            Math.floor(Number(p.net_salary) + 1e-9).toLocaleString("en-IN");
 
 
         // ==================== AMOUNT IN WORDS ======================
@@ -1326,7 +1295,7 @@ function calculateSalary() {
     let totalEarnings = basic + hra + special + variable + bonus;
     setValue("totalEarnings", totalEarnings.toFixed(2));
 
-    /* ============================= AUTO CALCULATE PROVIDENT FUND (PF) ===============================  */
+    /* ===================== AUTO CALCULATE PROVIDENT FUND (PF) ===================  */
 
     let pfEmployee = 0;
     let pfEmployer = 0;
@@ -1375,10 +1344,11 @@ function calculateSalary() {
     let netSalary = totalEarnings - totalDeduction;
     if (netSalary < 0) netSalary = 0;
 
-    let formattedNetPay = netSalary.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
+    // Net Pay is shown as whole Rupees only — paise are dropped from the
+    // payslip display (truncated, not rounded up), matching the words line.
+    let netSalaryWhole = Math.floor(netSalary + 1e-9);
+
+    let formattedNetPay = netSalaryWhole.toLocaleString('en-IN');
 
     document.getElementById("netpay").innerText = formattedNetPay;
     document.getElementById("amountWords").innerText = numberToWords(netSalary);
@@ -1501,11 +1471,8 @@ function addCurrentRowToExcel(silent) {
     };
 
     // A payslip is uniquely identified by Associate ID + Start Date (the
-    // same employee can have a separate row per pay period). If a row
-    // for this exact payslip already exists in the queue — e.g. the
-    // employee's form-inputs were edited after the payslip was
-    // generated/added — update that row in place instead of appending
-    // a duplicate.
+    // same employee can have a separate row per pay period). 
+    
     let existingIndex = accumulatedPayslips.findIndex(
         (row) => row["Associate ID"] === associateId && row["Start Date"] === currentRowData["Start Date"]
     );

@@ -47,11 +47,6 @@ body {
     font-weight: 500;
 }
 
-/* Selects were using the browser's native dropdown chrome, which reserves
-   extra space on the right for the arrow — pushing the selected text off
-   toward one edge instead of sitting evenly between the same 14px left/
-   right padding the text inputs use. Custom-drawn arrow keeps padding
-   symmetric on both sides. */
 select.form-inputs {
     appearance: none;
     -webkit-appearance: none;
@@ -372,10 +367,8 @@ select.form-inputs {
 
 }
 
-/* ===================================================
-   Employee Payslip History
-=================================================== */
-
+/* ========================  Employee Payslip History =========================== */
+  
 .history-container{
     width:95%;
     margin:30px auto;
