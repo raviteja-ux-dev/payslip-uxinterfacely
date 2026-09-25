@@ -1808,7 +1808,7 @@ async function sendPayslipEmail() {
         );
 
        const response = await fetch(
-            "/send-payslip",
+            "https://payslip-uxinterfacely.onrender.com/send-payslip",
             {
                 method: "POST",
                 body: formData
