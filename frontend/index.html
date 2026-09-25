@@ -127,14 +127,29 @@
             <label for="Bonus">Bonus</label>
             <select id="Bonus" class="form-inputs" onchange="toggleBonus()">
               <option value="">Select</option>
-              <option value="yes"> Yes</option>
+              <option value="yes">Yes</option>
               <option value="no">No</option>
+              <option value="joining_bonus">Joining Bonus</option>
+              <option value="overtime">Incentive</option>
             </select>
           </div>
 
+          <!-- Generic Bonus amount (shown only when "Yes" is selected) -->
           <div class="form-control" id="BonusAmountBox" style="display:none;">
             <label for="BonusAmount">Bonus Amount</label>
             <input type="number" id="BonusAmount" class="form-inputs" name="bonusamount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updateBonus()">
+          </div>
+
+          <!-- Joining Bonus amount (shown only when "Joining Bonus" is selected) -->
+          <div class="form-control" id="JoiningBonusAmountBox" style="display:none;">
+            <label for="JoiningBonusAmount">Joining Bonus Amount</label>
+            <input type="number" id="JoiningBonusAmount" class="form-inputs" name="joiningbonusamount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updateBonus()">
+          </div>
+
+          <!-- Incentive amount (shown only when "Incentive" is selected) -->
+          <div class="form-control" id="OvertimeAmountBox" style="display:none;">
+            <label for="OvertimeAmount">Incentive Amount</label>
+            <input type="number" id="OvertimeAmount" class="form-inputs" name="overtimeamount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1'); updateBonus()">
           </div>
 
           <!-- PF Field -->
@@ -249,7 +264,7 @@
           <table id="employeeTable" class="emp-table">
           <tr>
             <td rowspan="4" class="logo">
-              <img src="logo.png" alt="UXinterfacely Logo">
+              <img src="./assets/company-logo.png" alt="UXinterfacely Logo">
             </td>
             <th>Employee ID</th>
             <td>
@@ -283,9 +298,13 @@
           </tr>
           <tr id="uanRow">
             <th>UAN</th>
-            <td  colspan="3" >
+            <td>
               <input type="text" id="displayUan">
-            </td>                     
+            </td> 
+            <th>Days Paid</th>
+            <td >
+              <input type="text" id="displayDaysPaid" readonly>
+            </td>                   
           </tr>
         </table>
         </div>
@@ -323,14 +342,17 @@
           <p>This is a computer generated payslip.</p>
         </div>
       <!-- Action Buttons Toolbar -->
-      <div class="action-toolbar print-hide" id="actionToolbar" style="display:none;">
-        <button type="button" class="btn-pdf" onclick="downloadPDF()"> Download PDF </button>
-        <button type="button" class="btn-print" onclick="printPayslip()"> Print Payslip </button>
-        <button type="button" class="btn-email" onclick="sendPayslipEmail()">Send Payslip</button>
-        <button type="button" class="btn-excel" onclick="addCurrentRowToExcel()"> Add Current Row </button>
-        <br>
-        <button type="button" class="btn-excel" style="background-color: #0284c7;" onclick="downloadAccumulatedExcel()"> Download Excel </button>
-        <button type="button" class="btn-clear" onclick="clearExcelRows()"> Clear Stored Rows </button>
+      <div class="action-toolbar print-hide" id="actionToolbar" style="display:none; flex-direction: column; align-items: center; gap: 10px;">
+        <div class="action-toolbar-row" style="display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; width:100%;">
+          <button type="button" class="btn-pdf" onclick="downloadPDF()"> Download PDF </button>
+          <button type="button" class="btn-print" onclick="printPayslip()"> Print Payslip </button>
+          <button type="button" class="btn-email" onclick="sendPayslipEmail()">Send Payslip</button>
+          <button type="button" class="btn-excel" onclick="addCurrentRowToExcel()"> Add Current Row </button>
+        </div>
+        <div class="action-toolbar-row" style="display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; width:100%;">
+          <button type="button" class="btn-excel" style="background-color: #0284c7;" onclick="downloadAccumulatedExcel()"> Download Excel </button>
+          <button type="button" class="btn-clear" onclick="clearExcelRows()"> Clear Stored Rows </button>
+        </div>
       </div>
 
    <!-- Libraries -->

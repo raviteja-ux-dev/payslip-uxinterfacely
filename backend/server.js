@@ -19,6 +19,7 @@ const upload = multer({
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -422,20 +423,19 @@ app.post(
                             
                             <p style="margin-bottom: 15px;">
                                 <strong>Payslip Password Format</strong><br>
-                                The attached PDF is password protected. To open the payslip, please use:<br>
+                                The attached payslip PDF is password protected. To access the document, please use the following password format:<br>
                                 First 4 letters of your name in CAPITAL letters + Associate ID
                             </p>
                             
                             <p style="margin-bottom: 15px;">
                                 Example:<br>
                                 Name: Apple<br>
-                                Associate ID: UX1234<br>
+                                Associate ID: UX1234 (Enter Your Associate/Employee ID)<br>
                                 Password: APPLUX1234
                             </p>
                             
                             <p style="margin-bottom: 15px;">
-                                If you do not know your Associate ID, please contact your respective contact person to obtain the details.<br>
-                                If you face any issues accessing your payslip, please reach out to the Team for assistance.
+                                If you are unaware of your Associate ID, please contact your respective HR/contact person to obtain the required details.                                
                             </p>
                             
                             <p style="margin-bottom: 0;">Best Regards,</p>

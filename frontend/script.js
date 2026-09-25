@@ -108,23 +108,28 @@ function hideRow(id) {
     let generatedPayslips = [];
     let currentPayslipIndex = 0;
     let generatedMode = false;
+    // Last LOP amount computed in calculateSalary(), reused when adding a
+    // row to the accumulated payslips export.
+    let currentLopAmount = 0;
 
 /* ========== SINGLE TABLE RENDERER (PAIRS EARNINGS & DEDUCTIONS ROW BY ROW) =======*/
 
-function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS, foodCoupon) {
+function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS, foodCoupon, bonusType, lopDaysEntered, lopAmount) {
     // 1. Build list of active Earnings
     let earningsList = [
-        { label: "Basic Salary", val: basic.toFixed(2) },
-        { label: "HRA", val: hra.toFixed(2) },
-        { label: "Special Allowance", val: special.toFixed(2) }
+        { label: "Basic Salary", val: Math.round(basic) },
+        { label: "HRA", val: Math.round(hra) },
+        { label: "Special Allowance", val: Math.round(special) }
     ];
 
     if (document.getElementById("variablePay").value === "yes") {
-        earningsList.push({ label: "Variable Pay", val: variable.toFixed(2) });
+        earningsList.push({ label: "Variable Pay", val: Math.round(variable) });
     }
 
-    if (document.getElementById("Bonus").value === "yes") {
-        earningsList.push({ label: "Bonus", val: bonus.toFixed(2) });
+    // Bonus row is labeled by the selected type (Joining Bonus / Overtime)
+    let resolvedBonusType = bonusType || getBonusType();
+    if (resolvedBonusType && bonus > 0) {
+        earningsList.push({ label: bonusTypeLabel(resolvedBonusType), val: Math.round(bonus) });
     }
 
     // 2. Build list of active Deductions
@@ -135,17 +140,25 @@ function renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfE
     let deductionsList = [];
 
     if (document.getElementById("PFfield").value === "yes") {
-        deductionsList.push({ label: "PF - Employee Fund", val: pfEmployee.toFixed(2) });
+        deductionsList.push({ label: "PF - Employee Fund", val: Math.round(pfEmployee) });
     }
 
-    deductionsList.push({ label: "Professional Tax", val: professionalTax.toFixed(2) });
+    deductionsList.push({ label: "Professional Tax", val: Math.round(professionalTax) });
 
     if (document.getElementById("tds").value === "yes") {
-        deductionsList.push({ label: "TDS", val: TDS.toFixed(2) });
+        deductionsList.push({ label: "TDS", val: Math.round(TDS) });
     }
 
     if (document.getElementById("foodCoupon").value === "yes") {
-        deductionsList.push({ label: "Food Coupon", val: foodCoupon.toFixed(2) });
+        deductionsList.push({ label: "Food Coupon", val: Math.round(foodCoupon) });
+    }
+
+    // LOP — shown as the rupee amount deducted for the LOP days, with
+    // just the plain "LOP" label (no day count in it).
+    let lopDaysVal = (lopDaysEntered !== undefined) ? lopDaysEntered : (document.getElementById("lopdays").value === "yes" ? getValue("LopPayField") : 0);
+    let lopAmountVal = (lopAmount !== undefined) ? lopAmount : 0;
+    if (document.getElementById("lopdays").value === "yes" && lopDaysVal > 0) {
+        deductionsList.push({ label: "LOP", val: Math.round(lopAmountVal) });
     }
 
     // 3. Render rows into the single table
@@ -183,6 +196,10 @@ function renderViewedSalaryTable(p) {
 
     let monthlyCTC = annualCTC / 12;
 
+    // Full-month per-day rate, also used below to price the LOP days
+    // shown in Deductions.
+    let perDaySalary = 0;
+
     if (p.start_date && payableDays > 0) {
 
         const date = new Date(p.start_date);
@@ -194,7 +211,7 @@ function renderViewedSalaryTable(p) {
                 0
             ).getDate();
 
-        const perDaySalary =
+        perDaySalary =
             monthlyCTC / totalMonthDays;
 
         monthlyCTC =
@@ -259,17 +276,17 @@ function renderViewedSalaryTable(p) {
 
         {
             label: "Basic Salary",
-            val: basic.toFixed(2)
+            val: Math.round(basic)
         },
 
         {
             label: "HRA",
-            val: hra.toFixed(2)
+            val: Math.round(hra)
         },
 
         {
             label: "Special Allowance",
-            val: special.toFixed(2)
+            val: Math.round(special)
         }
 
     ];
@@ -280,19 +297,21 @@ function renderViewedSalaryTable(p) {
         earningsList.push({
 
             label: "Variable Pay",
-            val: variable.toFixed(2)
+            val: Math.round(variable)
 
         });
 
     }
 
-    // Bonus
+    // Bonus (Joining Bonus / Overtime)
     if (bonus > 0) {
+
+        let bonusType = p.bonus_type || getBonusType();
 
         earningsList.push({
 
-            label: "Bonus",
-            val: bonus.toFixed(2)
+            label: bonusTypeLabel(bonusType),
+            val: Math.round(bonus)
 
         });
 
@@ -309,7 +328,7 @@ function renderViewedSalaryTable(p) {
         deductionsList.push({
 
             label: "PF - Employee Fund",
-            val: pfEmployee.toFixed(2)
+            val: Math.round(pfEmployee)
 
         });
 
@@ -319,7 +338,7 @@ function renderViewedSalaryTable(p) {
     deductionsList.push({
 
         label: "Professional Tax",
-        val: professionalTax.toFixed(2)
+        val: Math.round(professionalTax)
 
     });
 
@@ -329,7 +348,7 @@ function renderViewedSalaryTable(p) {
         deductionsList.push({
 
             label: "TDS",
-            val: tds.toFixed(2)
+            val: Math.round(tds)
 
         });
 
@@ -341,7 +360,23 @@ function renderViewedSalaryTable(p) {
         deductionsList.push({
 
             label: "Food Coupon",
-            val: foodCoupon.toFixed(2)
+            val: Math.round(foodCoupon)
+
+        });
+
+    }
+
+    // LOP — shown as the rupee amount for the LOP days, priced at the
+    // full-month per-day rate, with a plain "LOP" label.
+    const lopDaysP = Number(p.lop_days) || 0;
+    if (lopDaysP > 0) {
+
+        const lopAmountP = perDaySalary * lopDaysP;
+
+        deductionsList.push({
+
+            label: "LOP",
+            val: Math.round(lopAmountP)
 
         });
 
@@ -434,15 +469,48 @@ function updateVariablePay() {
     calculateSalary();
 }
 
-/* BONUS */
+/* BONUS (Yes / Joining Bonus / Overtime — each with its own amount field) */
+function getBonusType() {
+    let val = document.getElementById("Bonus").value;
+    return (val === "yes" || val === "joining_bonus" || val === "overtime") ? val : "";
+}
+
+// Label shown against the amount in the payslip Earnings table
+function bonusTypeLabel(type) {
+    if (type === "joining_bonus") return "Joining Bonus";
+    if (type === "overtime") return "Incentive";
+    if (type === "yes") return "Bonus";
+    return "Bonus";
+}
+
+// The input box id that holds the amount for the currently selected type
+function bonusAmountFieldId(type) {
+    if (type === "joining_bonus") return "JoiningBonusAmount";
+    if (type === "overtime") return "OvertimeAmount";
+    if (type === "yes") return "BonusAmount";
+    return null;
+}
+
+function getBonusAmount() {
+    let fieldId = bonusAmountFieldId(getBonusType());
+    return fieldId ? getValue(fieldId) : 0;
+}
+
 function toggleBonus() {
-    let enabled = document.getElementById("Bonus").value === "yes";
-    if (enabled) {
-        show("BonusAmountBox");
-    } else {
-        hide("BonusAmountBox");
-        setValue("BonusAmount", "");
+    let bonusType = getBonusType();
+
+    // Hide + clear every bonus amount box first, then show only the one
+    // that matches the current selection.
+    ["BonusAmountBox", "JoiningBonusAmountBox", "OvertimeAmountBox"].forEach(hide);
+    setValue("BonusAmount", "");
+    setValue("JoiningBonusAmount", "");
+    setValue("OvertimeAmount", "");
+
+    let fieldId = bonusAmountFieldId(bonusType);
+    if (fieldId) {
+        show(fieldId + "Box");
     }
+
     calculateSalary();
 }
 
@@ -546,6 +614,12 @@ function toggleFoodCoupon() {
     calculateSalary();
 }
 
+/* Format the "Days Paid" field — just the worked days count, e.g. "28" */
+function formatDaysPaid(workedDays, calendarDays) {
+    workedDays = Number(workedDays) || 0;
+    return `${workedDays}`;
+}
+
 /* DAYS CALCULATION */
 function calculateDays() {
     let start = new Date(document.getElementById("startDate").value);
@@ -569,6 +643,12 @@ function calculateDays() {
     }
 
     setValue("DaysWorked", workedDays);
+
+    // Days Paid shown on the payslip as workedDays/calendarDays (e.g.
+    // "28/30" when 2 LOP days were taken in a 30-day month). With no
+    // LOP, workedDays equals the full calendar days, e.g. "30/30".
+    setValue("displayDaysPaid", formatDaysPaid(workedDays, days));
+
     calculateSalary();
 }
 
@@ -807,7 +887,8 @@ async function saveEmployeeToDatabase() {
         lop_days: getValue("LopPayField"),
 
         variable_pay: getValue("variableAmount"),
-        bonus: getValue("BonusAmount"),
+        bonus: getBonusAmount(),
+        bonus_type: getBonusType() || null,
 
         pf_employee: getValue("pfEmployee"),
         pf_employer: getValue("pfEmployer"),
@@ -848,7 +929,8 @@ async function saveEmployeeToDatabase() {
         lop_days: getValue("LopPayField"),
 
         variable_pay: getValue("variableAmount"),
-        bonus: getValue("BonusAmount"),
+        bonus: getBonusAmount(),
+        bonus_type: getBonusType() || null,
 
         pf_employee: getValue("pfEmployee"),
         pf_employer: getValue("pfEmployer"),
@@ -1048,6 +1130,8 @@ async function viewPayslip(id) {
             hideRow("uanRow");
         }
 
+        setValue("displayDaysPaid", formatDaysPaid(p.days_worked, p.days_payable));
+
         document.getElementById("joindate").value =
             formatDateDMY(p.join_date || "");
 
@@ -1069,6 +1153,10 @@ async function viewPayslip(id) {
 
         let monthlyCTC = annualCTC / 12;
 
+        // Full-month per-day rate, also used below to price the LOP
+        // days shown in Deductions.
+        let perDaySalary = 0;
+
         if (startDate && daysWorked > 0) {
 
             let date = new Date(startDate);
@@ -1080,7 +1168,7 @@ async function viewPayslip(id) {
                     0
                 ).getDate();
 
-            let perDaySalary =
+            perDaySalary =
                 monthlyCTC / totalMonthDays;
 
             monthlyCTC =
@@ -1138,12 +1226,20 @@ async function viewPayslip(id) {
             Number(p.food_coupon) || 0;
 
 
+        let bonusType = p.bonus_type || (bonus > 0 ? "yes" : "");
+        let lopDaysHistory = Number(p.lop_days) || 0;
+
         // Restore optional salary selections
         document.getElementById("variablePay").value =
             variable > 0 ? "yes" : "no";
 
         document.getElementById("Bonus").value =
-            bonus > 0 ? "yes" : "no";
+            bonusType || "no";
+        toggleBonus();
+        if (bonus > 0) {
+            let fieldId = bonusAmountFieldId(bonusType) || "BonusAmount";
+            setValue(fieldId, bonus);
+        }
 
         document.getElementById("PFfield").value =
             (pfEmployee > 0 || pfEmployer > 0) ? "yes" : "no";
@@ -1153,6 +1249,12 @@ async function viewPayslip(id) {
 
         document.getElementById("foodCoupon").value =
             foodCoupon > 0 ? "yes" : "no";
+
+        document.getElementById("lopdays").value =
+            lopDaysHistory > 0 ? "yes" : "no";
+        if (lopDaysHistory > 0) setValue("LopPayField", lopDaysHistory);
+
+        let lopAmountHistory = perDaySalary * lopDaysHistory;
 
         // ===================== RENDER SALARY TABLE =====================
 
@@ -1167,17 +1269,20 @@ async function viewPayslip(id) {
             pfEmployer,
             professionalTax,
             TDS,
-            foodCoupon
+            foodCoupon,
+            bonusType,
+            lopDaysHistory,
+            lopAmountHistory
         );
 
 
         // ====================  TOTALS ======================
 
         document.getElementById("totalEarnings").value =
-            Number(p.total_earnings).toFixed(2);
+            Math.round(Number(p.total_earnings));
 
         document.getElementById("totalDeduction").value =
-            Number(p.total_deductions).toFixed(2);
+            Math.round(Number(p.total_deductions));
 
 
         // ==================== NET PAY ======================
@@ -1243,6 +1348,10 @@ function calculateSalary() {
     const STANDARD_MONTH_DAYS = 30;
 
     let normalizedWorkedDays = 0;
+    // Full-month, unprorated per-day rate on the 30-day standard — this
+    // is also the rate used below to cost the LOP days for display, so
+    // 1 LOP day is always priced the same regardless of the month.
+    let perDaySalary = 0;
 
     if (startDate && payableDays > 0) {
         let date = new Date(startDate);
@@ -1254,7 +1363,7 @@ function calculateSalary() {
         let normalizedPayableDays = payableDays * (STANDARD_MONTH_DAYS / actualMonthDays);
         normalizedWorkedDays = normalizedPayableDays - lopDaysTaken;
 
-        let perDaySalary = monthlyCTC / STANDARD_MONTH_DAYS;
+        perDaySalary = monthlyCTC / STANDARD_MONTH_DAYS;
         monthlyCTC = perDaySalary * normalizedWorkedDays;
     } else {
         monthlyCTC = 0;
@@ -1268,10 +1377,8 @@ function calculateSalary() {
         variable = getValue("variableAmount");
     }
 
-    let bonus = 0;
-    if (document.getElementById("Bonus").value === "yes") {
-        bonus = getValue("BonusAmount");
-    }
+    let bonusType = getBonusType();
+    let bonus = getBonusAmount();
 
     /* ============================= PROVIDENT FUND (PF) TIER ===============================
        PF is 12% of Basic, capped at Rs. 1800 (the statutory wage-ceiling
@@ -1293,7 +1400,7 @@ function calculateSalary() {
     if (special < 0) special = 0;
 
     let totalEarnings = basic + hra + special + variable + bonus;
-    setValue("totalEarnings", totalEarnings.toFixed(2));
+    setValue("totalEarnings", Math.round(totalEarnings));
 
     /* ===================== AUTO CALCULATE PROVIDENT FUND (PF) ===================  */
 
@@ -1316,8 +1423,8 @@ function calculateSalary() {
         // Employer's PF is always the flat/tier amount — never prorated.
         pfEmployer = basePfEach;
 
-        setValue("pfEmployee", pfEmployee.toFixed(2));
-        setValue("pfEmployer", pfEmployer.toFixed(2));
+        setValue("pfEmployee", Math.round(pfEmployee));
+        setValue("pfEmployer", Math.round(pfEmployer));
     }
 
     // Only PF Employee reduces the employee's take-home pay. Employer's
@@ -1336,10 +1443,16 @@ function calculateSalary() {
     }
 
     let totalDeduction = pfEmployee + professionalTax + TDS + foodCoupon;
-    setValue("totalDeduction", totalDeduction.toFixed(2));
+    setValue("totalDeduction", Math.round(totalDeduction));
+
+    // LOP — the raw day count entered in the UI, priced at the full,
+    // unprorated per-day rate (perDaySalary) for display in Deductions.
+    let lopDaysEntered = document.getElementById("lopdays").value === "yes" ? getValue("LopPayField") : 0;
+    let lopAmount = perDaySalary * (Number(lopDaysEntered) || 0);
+    currentLopAmount = lopAmount;
 
     // Render table with separate PF rows
-    renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS, foodCoupon);
+    renderSalaryTable(basic, hra, special, variable, bonus, pfEmployee, pfEmployer, professionalTax, TDS, foodCoupon, bonusType, lopDaysEntered, lopAmount);
 
     let netSalary = totalEarnings - totalDeduction;
     if (netSalary < 0) netSalary = 0;
@@ -1464,7 +1577,14 @@ function addCurrentRowToExcel(silent) {
         "End Date": formatDateLong(document.getElementById("endDate").value),
         "Days Payable": getValue("DaysPayable"),
         "Days Worked": getValue("DaysWorked"),
+        "LOP Days": document.getElementById("lopdays").value === "yes" ? getValue("LopPayField") : 0,
+        "LOP Amount": document.getElementById("lopdays").value === "yes" ? Math.round(currentLopAmount) : 0,
         "Annual CTC": getValue("AnnualCTC"),
+        "Joining Bonus": getBonusType() === "joining_bonus" ? getBonusAmount() : 0,
+        "Incentive": getBonusType() === "overtime" ? getBonusAmount() : 0,
+        "Bonus": getBonusType() === "yes" ? getBonusAmount() : 0,
+        "PF Employee": document.getElementById("PFfield").value === "yes" ? getValue("pfEmployee") : 0,
+        "PF Employer": document.getElementById("PFfield").value === "yes" ? getValue("pfEmployer") : 0,
         "Total Earnings": getValue("totalEarnings"),
         "Total Deductions": getValue("totalDeduction"),
         "Net Pay": document.getElementById("netpay").innerText
@@ -1570,7 +1690,6 @@ async function downloadPDF() {
 async function sendPayslipEmail() {
 
     try {
-
         const employeeEmail =
             document.getElementById("email").value.trim();
 
@@ -1688,8 +1807,8 @@ async function sendPayslipEmail() {
             "MB"
         );
 
-        const response = await fetch(
-            "https://payslip-uxinterfacely.onrender.com/send-payslip",
+       const response = await fetch(
+            "/send-payslip",
             {
                 method: "POST",
                 body: formData
@@ -1825,16 +1944,53 @@ function loadEmployee(index) {
 
     }
 
-    // =========== BONUS ===========
-  
-    let bonus = Number(emp["Bonus"]) || 0;
+    // =========== BONUS (Joining Bonus / Overtime / Bonus — one column each) ===========
+    // Each bonus type gets its own Excel column; whichever column has an
+    // amount decides which bonus type gets selected and filled in the UI.
 
-    if (bonus > 0) {
+    let joiningBonusAmt = Number(emp["Joining Bonus"]) || 0;
+    let overtimeAmt = Number(emp["Incentive"] ?? emp["Overtime"]) || 0;
+    let plainBonusAmt = Number(emp["Bonus"]) || 0;
 
-        document.getElementById("Bonus").value = "yes";
+    let bonusTypeVal = "";
+    let bonus = 0;
+
+    if (joiningBonusAmt > 0) {
+
+        bonusTypeVal = "joining_bonus";
+        bonus = joiningBonusAmt;
+
+    } else if (overtimeAmt > 0) {
+
+        bonusTypeVal = "overtime";
+        bonus = overtimeAmt;
+
+    } else if (plainBonusAmt > 0) {
+
+        // Could be the new dedicated "Bonus" column, or an older sheet's
+        // combined "Bonus" + "Bonus Type" pair — check the legacy type
+        // column so a Joining Bonus / Overtime value that landed in the
+        // old "Bonus" column still routes to the right type.
+        let legacyTypeRaw = (emp["Bonus Type"] || "").toString().trim().toLowerCase();
+
+        if (legacyTypeRaw === "joining bonus" || legacyTypeRaw === "joining_bonus") {
+            bonusTypeVal = "joining_bonus";
+        } else if (legacyTypeRaw === "overtime" || legacyTypeRaw === "incentive") {
+            bonusTypeVal = "overtime";
+        } else {
+            bonusTypeVal = "yes";
+        }
+
+        bonus = plainBonusAmt;
+
+    }
+
+    if (bonusTypeVal && bonus > 0) {
+
+        document.getElementById("Bonus").value = bonusTypeVal;
         toggleBonus();
 
-        setValue("BonusAmount", bonus);
+        setValue(bonusAmountFieldId(bonusTypeVal), bonus);
 
     } else {
 
@@ -2160,6 +2316,8 @@ function downloadExcelTemplate() {
             "UAN": "",
 
             "Variable Pay": "",
+            "Joining Bonus": "",
+            "Incentive": "",
             "Bonus": "",
 
             "PF Employee": "",
@@ -2186,6 +2344,8 @@ function downloadExcelTemplate() {
 window.onload = function () {
     hide("variablePayAmount");
     hide("BonusAmountBox");
+    hide("JoiningBonusAmountBox");
+    hide("OvertimeAmountBox");
     hide("PFamountBox");
     hide("uanNumberBox");
     hide("tdsAmountBox");
@@ -2208,7 +2368,7 @@ window.onload = function () {
 
 /* AUTO CALCULATE LISTENERS */
 const autoCalculateFields = [
-    "AnnualCTC", "variableAmount", "BonusAmount", "tdsAmount", "foodCouponAmount", "LopPayField"
+    "AnnualCTC", "variableAmount", "BonusAmount", "JoiningBonusAmount", "OvertimeAmount", "tdsAmount", "foodCouponAmount", "LopPayField"
 ];
 
 autoCalculateFields.forEach(id => {
@@ -2309,7 +2469,9 @@ function saveCurrentFormToEmployeeArray() {
     emp["PAN"] = getText("pan").trim().toUpperCase();
     emp["UAN"] = document.getElementById("UAN").value === "yes" ? getText("uanNumber") : "";
     emp["Variable Pay"] = document.getElementById("variablePay").value === "yes" ? getValue("variableAmount") : 0;
-    emp["Bonus"] = document.getElementById("Bonus").value === "yes" ? getValue("BonusAmount") : 0;
+    emp["Joining Bonus"] = getBonusType() === "joining_bonus" ? getBonusAmount() : 0;
+    emp["Incentive"] = getBonusType() === "overtime" ? getBonusAmount() : 0;
+    emp["Bonus"] = getBonusType() === "yes" ? getBonusAmount() : 0;
     emp["PF Employee"] = document.getElementById("PFfield").value === "yes" ? getValue("pfEmployee") : 0;
     emp["PF Employer"] = document.getElementById("PFfield").value === "yes" ? getValue("pfEmployer") : 0;
     emp["TDS"] = document.getElementById("tds").value === "yes" ? getValue("tdsAmount") : 0;
