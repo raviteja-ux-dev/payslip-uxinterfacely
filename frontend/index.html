@@ -7,11 +7,26 @@
     <title>Pay Slip Generator</title>
   </head>
   <body>
+    <!-- ================= Page Header: Heading + Search ================= -->
+    <div class="page-header">
+      <div class="page-brand">
+        <img class="page-logo" src="./assets/company-logo.png" alt="UXinterfacely Logo">
+        <h1 class="page-title"> Payslip Generator</h1>
+      </div>
+      <div class="history-search">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5"></circle>
+            <line x1="15.5" y1="15.5" x2="21" y2="21"></line>
+          </svg>
+          <input type="text" id="historyAssociateId" placeholder="Associate ID">
+        </div>
+        <button type="button" onclick="searchPayslipHistory()">Search</button>
+      </div>
+    </div>
+
     <form id="payslipgenerator" name="payslipgenerator">
       <div class="payslip-form">
-        <div class="main-head">
-          <h4> CTC Payslip Generator</h4>
-        </div>
         <div id="formCreation" class="form-creation">
           <div class="form-control">
             <label for="name">Name</label>
@@ -238,18 +253,6 @@
         </div>   
       </div>
     </form>
-    <!-- ================= Employee Payslip History ================= -->
-
-      <div class="history-container">
-          <h3>Employee Payslip History</h3>
-          <div class="history-search">
-            <input type="text" id="historyAssociateId" placeholder="Enter Associate ID">        
-            <button type="button" onclick="searchPayslipHistory()">Search</button>
-          </div>
-          <div id="historyResult">
-
-          </div>
-      </div>
 
     <!-- PAYSLIP SECTION -->
       <div id="payslipLayout" class="payslip-layout" style="display:none;">

@@ -392,6 +392,25 @@ app.post(
             );
 
 
+            // ============ PDF file name: EmployeeName_Month_Year.pdf ==============
+
+            const safeEmployeeName =
+                String(employeeName)
+                    .replace(/[\\/:*?"<>|]/g, "")
+                    .trim()
+                    .replace(/\s+/g, "_") || "Employee";
+
+            const monthYearParts =
+                String(payMonthYear)
+                    .split(/[,\s]+/)
+                    .filter(Boolean);
+
+            const pdfFileName =
+                (monthYearParts.length >= 2 && /^\d{4}$/.test(monthYearParts[1]))
+                    ? `${safeEmployeeName}_${monthYearParts[0]}_${monthYearParts[1]}.pdf`
+                    : `${safeEmployeeName}_Payslip.pdf`;
+
+
             // ============ Password-protect the PDF ==============
 
             const payslipPassword =
@@ -467,7 +486,7 @@ app.post(
 
                         {
                             filename:
-                                `${employeeName}_Payslip.pdf`,
+                                pdfFileName,
 
                             content:
                                 protectedPdfBuffer

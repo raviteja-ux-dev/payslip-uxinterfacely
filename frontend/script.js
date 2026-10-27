@@ -885,10 +885,15 @@ async function saveEmployeeToDatabase() {
         days_payable: getValue("DaysPayable"),
         days_worked: getValue("DaysWorked"),
         lop_days: getValue("LopPayField"),
+        lop_amount: currentLopAmount || 0,
 
         variable_pay: getValue("variableAmount"),
-        bonus: getBonusAmount(),
-        bonus_type: getBonusType() || null,
+
+        bonus: getBonusType() === "yes" ? getBonusAmount() : 0,
+
+        incentive: getBonusType() === "overtime" ? getBonusAmount() : 0,
+
+        joining_bonus: getBonusType() === "joining_bonus" ? getBonusAmount() : 0,
 
         pf_employee: getValue("pfEmployee"),
         pf_employer: getValue("pfEmployer"),
@@ -927,10 +932,12 @@ async function saveEmployeeToDatabase() {
         days_payable: getValue("DaysPayable"),
         days_worked: getValue("DaysWorked"),
         lop_days: getValue("LopPayField"),
+        lop_amount: currentLopAmount || 0,
 
         variable_pay: getValue("variableAmount"),
-        bonus: getBonusAmount(),
-        bonus_type: getBonusType() || null,
+        bonus: getBonusType() === "yes" ? getBonusAmount() : 0,
+        incentive: getBonusType() === "overtime" ? getBonusAmount() : 0,
+        joining_bonus: getBonusType() === "joining_bonus" ? getBonusAmount() : 0,
 
         pf_employee: getValue("pfEmployee"),
         pf_employer: getValue("pfEmployer"),
@@ -967,9 +974,17 @@ async function saveEmployeeToDatabase() {
             }
         );
 
-        const employeeResult = await employeeResponse.json();
+       const employeeResult = await employeeResponse.json();
 
-        console.log("Employee Saved");
+        if (!employeeResponse.ok) {
+            console.error("Employee save failed:", employeeResult);
+
+            throw new Error(
+                employeeResult.error || "Failed to save employee"
+            );
+        }
+
+        console.log("Employee Saved Successfully");
         console.log(employeeResult);
 
         console.log("Saving Payslip...");
@@ -990,7 +1005,15 @@ async function saveEmployeeToDatabase() {
 
         const payslipResult = await payslipResponse.json();
 
-        console.log("Payslip Saved");
+        if (!payslipResponse.ok) {
+            console.error("Payslip save failed:", payslipResult);
+
+            throw new Error(
+                payslipResult.error || "Failed to save payslip"
+            );
+        }
+
+        console.log("Payslip Saved Successfully");
         console.log(payslipResult);
 
     }
@@ -1381,14 +1404,14 @@ function calculateSalary() {
     let bonus = getBonusAmount();
 
     /* ============================= PROVIDENT FUND (PF) TIER ===============================
-       PF is 12% of Basic, capped at Rs. 1800 (the statutory wage-ceiling
-       equivalent of 12% of Rs. 15,000). The tier is decided off the FULL
-       (unprorated) monthly Basic so a mid-month join/LOP never pushes
-       someone across the threshold. This same amount is what Special
-       Allowance sets aside for PF below — whether or not PF is actually
-       enabled for this slip. */
+       If the monthly Basic is Rs. 25,000 or more, PF is a flat Rs. 3,000 for
+       both Employee and Employer. If Basic is below Rs. 25,000, PF is 12% of
+       Basic for each. The tier is decided off the FULL (unprorated) monthly
+       Basic so a mid-month join/LOP never pushes someone across the
+       threshold. This same amount is what Special Allowance sets aside for
+       PF below — whether or not PF is actually enabled for this slip. */
     let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
-    let basePfEach = (fullMonthlyBasic > 15000) ? 1800 : (fullMonthlyBasic * 0.12);
+    let basePfEach = (fullMonthlyBasic >= 25000) ? 3000 : (fullMonthlyBasic * 0.12);
 
     let pfEnabled = document.getElementById("PFfield").value === "yes";
 
@@ -1795,10 +1818,16 @@ async function sendPayslipEmail() {
             formData.append("payMonthYear", "this month");
         }
 
+        let pdfFileName = `${employeeName.replace(/[\\/:*?"<>|]/g, "").trim().replace(/\s+/g, "_")}_Payslip.pdf`;
+        if (startDateVal) {
+            let d = new Date(startDateVal);
+            pdfFileName = `${employeeName.replace(/[\\/:*?"<>|]/g, "").trim().replace(/\s+/g, "_")}_${d.toLocaleString('default', { month: 'long' })}_${d.getFullYear()}.pdf`;
+        }
+
         formData.append(
             "pdf",
             pdfBlob,
-            `${employeeName}_Payslip.pdf`
+            pdfFileName
         );
 
         console.log(
