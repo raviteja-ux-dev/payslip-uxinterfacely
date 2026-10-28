@@ -1379,7 +1379,23 @@ function calculateSalary() {
        threshold. This same amount is what Special Allowance sets aside for
        PF below — whether or not PF is actually enabled for this slip. */
     let fullMonthlyBasic = (annualCTC > 0) ? (annualCTC / 12 * 0.50) : basic;
-    let basePfEach = (fullMonthlyBasic >= 25000) ? 3000 : (fullMonthlyBasic * 0.12);
+
+    // PF rule depends on the Start Date month:
+    //   before 1 Sept 2026  -> ceiling 15,000 (flat 1,800 each)
+    //   1 Sept 2026 onwards -> ceiling 25,000 (flat 3,000 each)
+    // Below the ceiling, PF is 12% of basic.
+    const PF_RULE_CHANGE_DATE = "2026-09-01";   // yyyy-mm-dd, same format as the date input
+    let pfCeiling, pfFlatAmount;
+
+    if (startDate && startDate < PF_RULE_CHANGE_DATE) {
+        pfCeiling = 15000;
+        pfFlatAmount = 1800;
+    } else {
+        pfCeiling = 25000;
+        pfFlatAmount = 3000;
+    }
+
+    let basePfEach = (fullMonthlyBasic >= pfCeiling) ? pfFlatAmount : (fullMonthlyBasic * 0.12);
 
     let pfEnabled = document.getElementById("PFfield").value === "yes";
 
