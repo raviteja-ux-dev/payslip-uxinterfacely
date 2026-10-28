@@ -980,7 +980,7 @@ async function saveEmployeeToDatabase() {
             console.error("Employee save failed:", employeeResult);
 
             throw new Error(
-                employeeResult.error || "Failed to save employee"
+                employeeResult.message || employeeResult.error || "Failed to save employee"
             );
         }
 
@@ -1009,7 +1009,7 @@ async function saveEmployeeToDatabase() {
             console.error("Payslip save failed:", payslipResult);
 
             throw new Error(
-                payslipResult.error || "Failed to save payslip"
+                payslipResult.message || payslipResult.error || "Failed to save payslip"
             );
         }
 
@@ -1018,88 +1018,56 @@ async function saveEmployeeToDatabase() {
 
     }
     catch (err) {
-
-        console.error("Database Save Error:", err);
-
+    console.error("Database Save Error:", err);
+    alert("Payslip generated, but NOT saved to database:\n" + err.message);
     }
 
 }
 
 async function searchPayslipHistory() {
+    const associateId = document
+        .getElementById("historyAssociateId").value.trim().toUpperCase();
+    const box = document.getElementById("historyResult");
 
-    let associateId =
-        document.getElementById("historyAssociateId")
-        .value
-        .trim()
-        .toUpperCase();
+    if (!associateId) { alert("Enter Associate ID"); return; }
 
-    if (!associateId) {
-
-        alert("Enter Associate ID");
-
-        return;
-
-    }
+    box.innerHTML = "<h4>Searching...</h4>";
 
     try {
-
         const response = await fetch(
-
-            `https://payslip-uxinterfacely.onrender.com/payslips/${associateId}`
-
+            `https://payslip-uxinterfacely.onrender.com/payslips/${encodeURIComponent(associateId)}`
         );
-
         const payslips = await response.json();
-        console.log("HISTORY API RESPONSE:", payslips);
 
-        let html = "";
+        if (!response.ok || !Array.isArray(payslips)) {
+            console.error("History API error:", payslips);
+            box.innerHTML = `<h4>Error: ${payslips.message || "Could not fetch payslips"}</h4>`;
+            return;
+        }
 
         if (payslips.length === 0) {
-
-            html = "<h4>No Payslips Found</h4>";
-
+            box.innerHTML = "<h4>No Payslips Found</h4>";
+            return;
         }
 
-        else {
-
-            payslips.forEach((p,index)=>{
-
-                html += `
-
-                <div class="history-card">
-
-                   <div class="history-info">
-                        Employee Name : ${p.employee_name}<br>
-                        Designation : ${p.designation}<br>
-                        <strong>${p.pay_month} ${p.pay_year}</strong><br>
-                        Net Salary :
-                        ₹${Number(p.net_salary).toLocaleString("en-IN")}
-                    </div>
-
-                    <div class="history-buttons">
-                        <button onclick="viewPayslip(${p.id})">View</button> 
-                    </div>
-
+        box.innerHTML = payslips.map(p => `
+            <div class="history-card">
+                <div class="history-info">
+                    Employee Name : ${p.employee_name}<br>
+                    Designation : ${p.designation}<br>
+                    <strong>${p.pay_month} ${p.pay_year}</strong><br>
+                    Net Salary : ₹${Number(p.net_salary).toLocaleString("en-IN")}
                 </div>
-
-                `;
-
-            });
-
-        }
-
-        document.getElementById("historyResult").innerHTML = html;
+                <div class="history-buttons">
+                    <button onclick="viewPayslip('${p.id}')">View</button>
+                </div>
+            </div>`).join("");
 
         window.historyPayslips = payslips;
-
-    }
-
-    catch(err){
-
+    } catch (err) {
         console.error(err);
-
+        box.innerHTML = "<h4>Server not reachable. Wait a minute and try again.</h4>";
     }
-
 }
 
 // ============= VIEW PAYSLIP FROM HISTORY =============

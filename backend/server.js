@@ -222,7 +222,7 @@ app.get("/payslips/:associateId", async (req, res) => {
                 .from("employees")
                 .select("employee_name, designation")
                 .eq("associate_id", associateId)
-                .single();
+                .maybeSingle();
 
         if (employeeError) {
             console.error(employeeError);
@@ -232,8 +232,8 @@ app.get("/payslips/:associateId", async (req, res) => {
         // Add employee details to every payslip
         const result = payslips.map(p => ({
             ...p,
-            employee_name: employee.employee_name,
-            designation: employee.designation
+            employee_name: employee?.employee_name || "",
+            designation: employee?.designation || ""
         }));
 
         res.json(result);
@@ -251,6 +251,8 @@ app.get("/payslips/:associateId", async (req, res) => {
     }
 
 });
+
+
 
 
 // ================== View Employees =====================
